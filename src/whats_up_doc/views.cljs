@@ -79,14 +79,16 @@
               :margin-left "20px"}}]]])
 
 (declare render-toc-item)
-
+(declare render-file-toc)
 
 (defn render-visited-toc [file]
   [:ul.nested
    (for [x (:toc-data file)]
-     [render-toc-item x file nil])])
-     ;^{:key (toc-react-key (:path file) (:type x) (:link x))}
-     ;[:li (toc-react-key (:path file) (:type x) (:link x))])])
+     ^{:key (toc-react-key (:path file) (:type x) (:link x))} [render-toc-item x file nil])])
+
+
+;^{:key (toc-react-key (:path file) (:type x) (:link x))}
+;[:li (toc-react-key (:path file) (:type x) (:link x))])])
 
 
 
@@ -116,17 +118,18 @@
        {:src   "icons/ic_expand_more_black_24px.svg"
         :style {:height      "16px"
                 :margin-left "20px"}}]]
-     [render-visited-toc file]]))
+     [render-visited-toc file]
+     ;[render-file-toc file]
+     ]))
 
 
 (defn render-toc-item [item parent visited-link?]
-  (let [react-key (toc-react-key (:path parent) (:type item) (:link item))]
-    (cond
-      (= (:type item) "heading") ^{:key react-key} [render-heading item parent]
-      (and (= (:type item) "link") (nil? visited-link?))
-      ^{:key react-key} [render-link item parent]
-      (and (= (:type item) "link") visited-link?)
-      ^{:key react-key} [render-visited-link item parent])))
+  (cond
+    (= (:type item) "heading") [render-heading item parent]
+    (and (= (:type item) "link") (nil? visited-link?))
+    [render-link item parent]
+    (and (= (:type item) "link") visited-link?)
+    [render-visited-link item parent]))
 
 
 (def-view render-file-toc [file-data]
@@ -135,8 +138,9 @@
             [:ul
              [:li "File TOC"]
              (for [x (:toc-data file-data)]
-               (let [visited-link? (distinct-filenames (:link x))]
-                 [render-toc-item x file-data visited-link?]))]))
+               (let [visited-link? (distinct-filenames (:link x))
+                     react-key (toc-react-key (:path file-data) (:type x) (:link x))]
+                 ^{:key react-key} [render-toc-item x file-data visited-link?]))]))
 
 
 (defn render-full-toc [file-data]
