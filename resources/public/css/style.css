@@ -1,0 +1,52 @@
+.nav-sidebar {
+
+}
+
+ul.nested {margin-left: 10px;}
+
+.top-menu {
+min-height: 58px;
+}
+
+
+ul > li {margin-left: 4px;
+margin-bottom: 5px;}
+
+
+.main-content {
+max-width: 80ch;
+border: "solid 2px black"
+}
+
+
+
+/* XS */
+@media (max-width: 767px) {
+
+
+}
+
+/* XS, SM */
+@media (max-width: 991px) {
+
+}
+
+/* SM */
+@media (min-width: 768px) and (max-width: 991px) {
+
+}
+
+/* MD */
+@media (min-width: 992px) and (max-width: 1199px) {
+
+}
+
+/* MD, LG */
+@media (min-width: 992px) {
+
+}
+
+/* LG */
+@media (min-width: 1200px) {
+
+}

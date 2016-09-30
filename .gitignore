@@ -1,3 +1,8 @@
+.idea/**/*
+!.idea/codeStyleSettings.xml
+*.iml
+*.log
+compiled/
 pom.xml
 pom.xml.asc
 *jar
