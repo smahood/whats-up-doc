@@ -9,7 +9,7 @@
             ))
 
 
-(enable-re-frisk!)
+(enable-re-frisk!  {:x 10 :y 700})
 
 ;
 ;(def test-content "### Introduction\n- [re-frame Introduction](../README.md)\n\n\n### Understanding Event Handlers\n- [-db Event Handlers] TODO \n- [Effectful Handlers](EffectfulHandlers.md) \n- [Interceptors](Interceptors.md) \n- [Effects](Effects.md) \n- [Coeffects](Coeffects.md) \n\n\n### Structuring Your Application\n\n- [Basic App Structure](Basic-App-Structure.md)\n- [Navigation](Navigation.md)\n- [Namespaced Keywords](Namespaced-Keywords.md)\n\n\n### Populating Your Application Data\n\n- [Loading Initial Data](Loading-Initial-Data.md)\n- [Talking To Servers](Talking-To-Servers.md)\n- [Subscribing to External Data](Subscribing-To-External-Data.md)\n\n\n### Debugging And Testing \n\n- [Debugging-Event-Handlers](Debugging-Event-Handlers.md)\n- [Debugging](Debugging.md)\n\n\n### Miscellaneous\n- [FAQs](FAQs/README.md)\n- [External Resources](External-Resources.md)\n- [Eek! Performance Problems](Performance-Problems.md)\n- [Solve the CPU hog problem](Solve-the-CPU-hog-problem.md)\n- [Using Stateful JS Components](Using-Stateful-JS-Components.md)\n- [The re-frame Logo](The-re-frame-logo.md)\n")

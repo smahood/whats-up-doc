@@ -1,7 +1,19 @@
 (ns whats-up-doc.views
   (:require [reagent.core :as reagent]
             [re-frame.core :as re-frame]
-            [camel-snake-kebab.core :as kebab]))
+            [camel-snake-kebab.core :as kebab]
+            [re-frisk.core :refer-macros [def-view]]
+            ))
+
+
+(defn toc-react-key
+  "Generate key for react based on parent, type, and link.
+   Hopefully this will be unique, but some sort of uniqueness check
+   needs to be built in to the parser.
+  "
+  [parent type link]
+  (str parent "-" type "-" link))
+
 
 ;; Top Menu
 
@@ -29,26 +41,32 @@
 
 ;; Table of Contents
 
-(declare render-toc-item)
-(declare render-file-toc)
+;(declare render-toc-item)
+;(declare render-file-toc)
+
+;
+;(defn render-toc-section [items]
+;  [:ul {:style {:margin-left "10px"}}
+;   (for [item items]
+;     [render-toc-item item])])
+;
+;
+;(defn render-toc-item [x]
+;  (if (vector? x)
+;    [:li [render-toc-section x]]
+;    [:li [:a {:href (str "#-" (kebab/->kebab-case x))} x]]))
 
 
-(defn render-toc-section [items]
-  [:ul {:style {:margin-left "10px"}}
-   (for [item items]
-     ^{:key item} [render-toc-item item])])
-
-
-(defn render-toc-item [x]
-  (if (vector? x)
-    [:li [render-toc-section x]]
-    [:li [:a {:href (str "#-" (kebab/->kebab-case x))} x]]))
-
-
-(defn render-heading [data parent]
+(defn render-heading
+  "Renders markdown headings"
+  [data parent]
+  ;^{:key (str (:path parent) "-" (:link data))}
   [:li [:span {:style {:font-weight "bold"}} (:display data)]])
 
-(defn render-link [data parent]
+(defn render-link
+  "Render markdown links"
+  [data parent]
+  ;^{:key (str (:path parent) "-" (:link data))}
   [:ul.nested
    [:li
     [:a
@@ -60,7 +78,32 @@
       :style {:height      "16px"
               :margin-left "20px"}}]]])
 
-(defn render-visited-link [data parent]
+(declare render-toc-item)
+
+
+(defn render-visited-toc [file]
+  [:ul.nested
+   (for [x (:toc-data file)]
+     [render-toc-item x file nil])])
+     ;^{:key (toc-react-key (:path file) (:type x) (:link x))}
+     ;[:li (toc-react-key (:path file) (:type x) (:link x))])])
+
+
+
+
+;(for [x (:toc-data file-data)]
+;              (let [react-key (str (:path file-data) "-" (:type x) "-" (:link x))]
+;                (cond
+;                  (= (:type x) "heading") ^{:key react-key} [render-heading x file-data]
+;                  (and (= (:type x) "link") (nil? (distinct-filenames (:link x))))
+;                  ^{:key react-key} [render-link x file-data]
+;                  (and (= (:type x) "link") (distinct-filenames (:link x)))
+;                  ^{:key react-key} [render-visited-link x file-data])))]))
+
+
+(defn render-visited-link
+  "Render a link once it has been visited"
+  [data parent]
   (let [github-files (re-frame/subscribe [:github-files])
         file (val (first (filter #(= (:url data) (:url (val %))) @github-files)))]
     [:ul.nested
@@ -68,30 +111,36 @@
       [:a
        {:href     "#"
         :on-click #(re-frame/dispatch [:navigation-link-clicked data parent])}
-       (:display data)]
+       (str (:display data))]
       [:img.clickable
        {:src   "icons/ic_expand_more_black_24px.svg"
         :style {:height      "16px"
                 :margin-left "20px"}}]]
-     [render-file-toc file]
-     ]))
+     [render-visited-toc file]]))
 
 
-(defn render-file-toc [file-data]
-  (let [github-files (re-frame/subscribe [:github-files])
-        distinct-filenames (set (map #(:name (val %)) @github-files))]
-    ^{:key file-data} [:ul
-     [:li "File TOC"]
-     (for [x (:toc-data file-data)]
-       (cond
-         (= (:type x) "heading") ^{:key x} [render-heading x file-data]
-         (= (:type x) "link")
-         (if (distinct-filenames (:link x))
-           ^{:key x} [render-visited-link x file-data]
-           ^{:key x} [render-link x file-data])))]))
+(defn render-toc-item [item parent visited-link?]
+  (let [react-key (toc-react-key (:path parent) (:type item) (:link item))]
+    (cond
+      (= (:type item) "heading") ^{:key react-key} [render-heading item parent]
+      (and (= (:type item) "link") (nil? visited-link?))
+      ^{:key react-key} [render-link item parent]
+      (and (= (:type item) "link") visited-link?)
+      ^{:key react-key} [render-visited-link item parent])))
+
+
+(def-view render-file-toc [file-data]
+          (let [github-files (re-frame/subscribe [:github-files])
+                distinct-filenames (set (map #(:name (val %)) @github-files))]
+            [:ul
+             [:li "File TOC"]
+             (for [x (:toc-data file-data)]
+               (let [visited-link? (distinct-filenames (:link x))]
+                 [render-toc-item x file-data visited-link?]))]))
 
 
 (defn render-full-toc [file-data]
+  ;(println file-data)
   (if file-data
     [render-file-toc file-data]
     [:li "No file data"]))

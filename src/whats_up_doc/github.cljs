@@ -11,7 +11,7 @@
 (defn extract-toc-base-data
   "Extracts links and headings"
   [markdown-content]
-  (re-seq #"#{1,6}.+|\[.*\]\(.*\)" markdown-content))
+  (re-seq #"#{1,6}\s.+|\[.*\]\(.*\)" markdown-content))
 
 (defn link-url
   "Get the full URL for a partial link"

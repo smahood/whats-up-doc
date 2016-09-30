@@ -11,16 +11,17 @@
                  [reagent "0.6.0"]
                  [re-frame "0.8.0"]
                  [day8.re-frame/http-fx "0.0.4"]
-                 [re-frisk "0.1.3"]
+                 [re-frisk "0.1.4"]
                  [cljs-ajax "0.5.8"]
                  [camel-snake-kebab "0.4.0"]
                  [markdown-clj "0.9.89"]
 
 
-                 [org.clojure/core.async "0.2.385"
+                 [org.clojure/core.async "0.2.391"
                   :exclusions [org.clojure/tools.reader]]]
 
-  :plugins [[lein-figwheel "0.5.7"]
+  :plugins [[lein-figwheel "0.5.8"]
+            [lein-ancient "0.6.10"]
             [lein-cljsbuild "1.1.3" :exclusions [[org.clojure/clojure]]]]
 
   :source-paths ["src"]
@@ -105,7 +106,7 @@
 
 
   :profiles {:dev {:dependencies [[binaryage/devtools "0.8.2"]
-                                  [figwheel-sidecar "0.5.7"]
+                                  [figwheel-sidecar "0.5.8"]
                                   [com.cemerick/piggieback "0.2.1"]]
                    ;; need to add dev source path here to get user.clj loaded
                    :source-paths ["src" "dev"]
