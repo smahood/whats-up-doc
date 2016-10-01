@@ -5,9 +5,9 @@
             [camel-snake-kebab.core :as kebab]
             [markdown.core :as markdown]))
 
-
-;; Top Menu
-
+;;;;;;;;;;;;;;
+;; Top Menu ;;
+;;;;;;;;;;;;;;
 
 (defn top-menu []
   [:div.frow.justify-start.gutters.items-stretch
@@ -30,9 +30,9 @@
      [:img {:src    "icons/ic_menu_black_24px.svg"
             :height "24px"}]]]])
 
-
-;; Table of Contents
-
+;;;;;;;;;;;;;;;;;;;;;;;
+;; Table of Contents ;;
+;;;;;;;;;;;;;;;;;;;;;;;
 
 (declare render-toc-item)
 
@@ -129,6 +129,10 @@
      [:li (str root-key)]
      [render-full-toc (root-key @github-files)]]))
 
+;;;;;;;;;;;;;;;;;;;
+;; Reading Frame ;;
+;;;;;;;;;;;;;;;;;;;
+
 
 (defn reading-frame
   "Render the reading frame"
@@ -156,12 +160,13 @@
          [:hr]
          [:br]])]]))
 
+;;;;;;;;;;;;;;;;;;;;
+;; Page Rendering ;;
+;;;;;;;;;;;;;;;;;;;;
 
-;; Main Rendering
-
-
-(defn main []
+(defn main [options]
   [:div
+   [:div (str options)]
    [top-menu]
    [:div.frow.justify-start.items-stretch
     [:div.nav-sidebar.hidden-xs.col-sm-3-12.col-md-3-12.col-lg-3-12

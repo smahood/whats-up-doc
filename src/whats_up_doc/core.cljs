@@ -5,101 +5,42 @@
             [whats-up-doc.views :as views]
             [reagent.core :as reagent]
             [re-frame.core :as re-frame]
-            [re-frisk.core :refer [enable-re-frisk!]]
-            ))
+            [re-frisk.core :refer [enable-re-frisk!]]))
 
 
-(enable-re-frisk!  {:x 10 :y 700})
-
-;
-;(def test-content "### Introduction\n- [re-frame Introduction](../README.md)\n\n\n### Understanding Event Handlers\n- [-db Event Handlers] TODO \n- [Effectful Handlers](EffectfulHandlers.md) \n- [Interceptors](Interceptors.md) \n- [Effects](Effects.md) \n- [Coeffects](Coeffects.md) \n\n\n### Structuring Your Application\n\n- [Basic App Structure](Basic-App-Structure.md)\n- [Navigation](Navigation.md)\n- [Namespaced Keywords](Namespaced-Keywords.md)\n\n\n### Populating Your Application Data\n\n- [Loading Initial Data](Loading-Initial-Data.md)\n- [Talking To Servers](Talking-To-Servers.md)\n- [Subscribing to External Data](Subscribing-To-External-Data.md)\n\n\n### Debugging And Testing \n\n- [Debugging-Event-Handlers](Debugging-Event-Handlers.md)\n- [Debugging](Debugging.md)\n\n\n### Miscellaneous\n- [FAQs](FAQs/README.md)\n- [External Resources](External-Resources.md)\n- [Eek! Performance Problems](Performance-Problems.md)\n- [Solve the CPU hog problem](Solve-the-CPU-hog-problem.md)\n- [Using Stateful JS Components](Using-Stateful-JS-Components.md)\n- [The re-frame Logo](The-re-frame-logo.md)\n")
-;
-;
-;(def string2 "[test]")
-;
-;
-;(re-seq #"\[.*\]\(.*\)" test-content)
-;
-
-
-
-;(re-frame/reg-event-db
-;  :get-markdown
-;  (fn [db [_ uri]]
-;    (
-;      ;; use the github API to retrieve the markdown content
-;      ;; and populate the :markdown-content key in app-db
-;
-;
-;      )))
-
-
-
-;; Initialization steps
-;; Initialize app-db defaults using dispatch-sync
-;; Load starting view data as quick as possible - want first render complete and quick
-;; Start recursive loading of docs - get contents from folder, then load readme, then rest of files
-;; When data comes in, read markdown to be able to generate new ToC and possibly transform to HTML
-;; At some point in process, render the HTML to the screen
-
-
-
-
-
-
-;
-;
-;(defn greeting [message]
-;  [:h1 message])
-;
-;
-;(defn clock
-;  []
-;  (let [time-color (re-frame/subscribe [:time-color])
-;        timer (re-frame/subscribe [:timer])]
-;    (fn clock-render
-;      []
-;      (let [time-str (-> @timer
-;                         .toTimeString
-;                         (clojure.string/split " ")
-;                         first)
-;            style {:style {:color @time-color}}]
-;        [:div.example-clock style time-str]))))
-;
-;
-;(defn color-input
-;  []
-;  (let [time-color (re-frame/subscribe [:time-color])]
-;    (fn color-input-render
-;      []
-;      [:div.color-input
-;       "Time color: "
-;       [:input {:type      "text"
-;                :value     @time-color
-;                :on-change #(re-frame/dispatch
-;                             [:time-color (-> % .-target .-value)])}]])))
-;
-;
-
-
+(enable-re-frisk!  {:x 10 :y 300})
 
 
 (enable-console-print!)
-;
-;(defn on-js-reload []
-;  ;; optionally touch your app-state to force rerendering depending on
-;  ;; your application
-;  ;; (swap! app-state update-in [:__figwheel_counter] inc)
-;  )
+
 
 (defn mount-root []
    (reagent/render [views/main]
                   (js/document.getElementById "app")))
 
 
+;; TODO - specify map of options that can be called from JS
+;; Loading - Lazy or Eager
+;; Root document - pass root doc in here, mandatory field
+;; Option to display all docs as single stream or separate files
+;; Would also be nice to have some graphical options - starting font size,
+;; CSS classes, etc - or ways to override CSS classes so that instead of
+;; using the default class you can provide your own classes or something
+;; It would be very cool to be able to insert interceptors or middleware
+;; that can be run when certain things are done (parsing or rendering the
+;; TOC or markdown, etc.) - it would be interesting to think about whether
+;; a plugin style architecture is at all reasonable, where all the rendering
+;; or parsing is a specific plugin, or can plug in different fetching and
+;; file parsing rules or something like that.
+;; Debug or pre-deployment mode - check what kind of download sizes there
+;; are, run against specs, etc. - maybe hook into frisk or similar
+;; Setup nice error messages for malformed specs like figwheel has
+;; for the config options
+;; What kind of error messages are reasonable for end users to see?
+
 
 (defn ^:export run
-  []
+  [options]
   (mount-root)
-  (re-frame/dispatch-sync [:initialize])
+  (re-frame/dispatch-sync [:initialize options])
  )
