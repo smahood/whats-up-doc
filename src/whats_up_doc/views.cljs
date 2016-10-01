@@ -10,7 +10,7 @@
 ;;;;;;;;;;;;;;
 
 (defn top-menu []
-  [:div.frow.justify-start.gutters.items-stretch
+  [:div.frow.justify-start.gutters.items-stretch.col-lg-11-12
    [:a {:href "http://re-frame.org"}
     [:img {:src   "img/re-frame_128w.png"
            :style {:margin "10px"}}]]
@@ -88,7 +88,7 @@
         :on-click #(re-frame/dispatch [:navigation-link-clicked data parent])}
        (str (:display data))]
       [:img.clickable
-       {:src   "icons/ic_expand_more_black_24px.svg"
+       {:src   "icons/ic_expand_less_black_24px.svg"
         :style {:height      "16px"
                 :margin-left "20px"}}]]
      [render-visited-toc file]
