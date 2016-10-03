@@ -35,9 +35,10 @@
 ;; What kind of error messages are reasonable for end users to see?
 
 
+;; TODO -  Refer to Clojure Applied to figure out how I want to pass in the parameters
 (defn ^:export run
   [options]
-  (re-frame/dispatch-sync [:initialize options])
+  (re-frame/dispatch-sync [:initialize (js->clj options)])
   (re-frisk/enable-re-frisk! {:x 920 :y 0})
   (mount-root))
 

@@ -8,14 +8,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Initialize Application Data ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(re-frame/dispatch [:initialize])
 
 (re-frame/reg-event-db
   :initialize
   (fn [db [_ options]]
-    (println "Initialization Options: " options)
-    (if (empty? db)
-        (re-frame/dispatch [:fetch-github-file "https://api.github.com/repos/Day8/re-frame/contents/docs/README.md?ref=master"]))
-    (merge db db/initial-state)))
+    ;(println "Initialization Options: " options)
+    ;(println "db at Init: " db)
+    ;(println "root_doc: " (get options "root_doc"))
+
+
+
+    (if (and (empty? db) (get options "root_doc"))
+      (do
+        (re-frame/dispatch [:fetch-github-file (get options "root_doc")])
+        (merge db db/initial-state)))
+    db))
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Github Fetching ;;
