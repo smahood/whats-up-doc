@@ -46,16 +46,19 @@
           {:type     "heading"
            :markdown x
            :display  display
-           :link     link})
+           :link     link
+           :expanded true})
         (re-matches #"\[.*\]\(.*\)" x)
         (let [title-str (re-find #"\[.*\]" x)
               link-str (re-find #"\(.*\)" x)
               link (subs link-str 1 (- (count link-str) 1))]
-          {:type     "link"
-           :markdown x
-           :display  (subs title-str 1 (- (count title-str) 1))
-           :link     link
-           :url      (build-child-url parent link)})))))
+          {:type       "link"
+           :markdown   x
+           :display    (subs title-str 1 (- (count title-str) 1))
+           :link       link
+           :url        (build-child-url parent link)
+           :child-data {}   ;; TODO - can I store the child data here? Is there a point?
+           :expanded   false})))))
 
 
 (defn transform-api-result

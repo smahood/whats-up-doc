@@ -96,6 +96,12 @@
      ;[render-file-toc file]
      ]))
 
+;; TODO - When link is loaded from root doc, add 2 more data keys - expanded (default false)
+;; and loaded (or data)
+;; When link is clicked, if the data is loaded then expand it. If data is not loaded, fetch the data
+;; then expand the link.
+
+
 
 (defn render-toc-item [item parent visited-link?]
   (cond

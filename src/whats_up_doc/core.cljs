@@ -5,7 +5,7 @@
             [whats-up-doc.views :as views]
             [reagent.core :as reagent]
             [re-frame.core :as re-frame]
-            [re-frisk.core :refer-macros [export-debugger!]]))
+            [re-frisk.core :as re-frisk :refer-macros [export-debugger!]]))
 
 (enable-console-print!)
 (export-debugger!)
@@ -38,6 +38,6 @@
 (defn ^:export run
   [options]
   (re-frame/dispatch-sync [:initialize options])
-  ;(enable-re-frisk! {:x 10 :y 300})
+  (re-frisk/enable-re-frisk! {:x 920 :y 0})
   (mount-root))
 
