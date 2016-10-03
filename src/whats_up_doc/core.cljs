@@ -5,17 +5,13 @@
             [whats-up-doc.views :as views]
             [reagent.core :as reagent]
             [re-frame.core :as re-frame]
-            [re-frisk.core :refer [enable-re-frisk!]]))
-
-
-(enable-re-frisk!  {:x 10 :y 300})
-
+            [re-frisk.core :refer-macros [export-debugger!]]))
 
 (enable-console-print!)
-
+(export-debugger!)
 
 (defn mount-root []
-   (reagent/render [views/main]
+  (reagent/render [views/main]
                   (js/document.getElementById "app")))
 
 
@@ -41,6 +37,7 @@
 
 (defn ^:export run
   [options]
-  (mount-root)
   (re-frame/dispatch-sync [:initialize options])
- )
+  ;(enable-re-frisk! {:x 10 :y 300})
+  (mount-root))
+

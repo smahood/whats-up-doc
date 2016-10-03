@@ -11,7 +11,7 @@
                  [reagent "0.6.0"]
                  [re-frame "0.8.0"]
                  [day8.re-frame/http-fx "0.0.4"]
-                 [re-frisk "0.1.4"]
+                 [re-frisk "0.2.0"]
                  [cljs-ajax "0.5.8"]
                  [camel-snake-kebab "0.4.0"]
                  [markdown-clj "0.9.89"]
@@ -47,8 +47,8 @@
                                :output-to            "resources/public/js/compiled/whats_up_doc.js"
                                :output-dir           "resources/public/js/compiled/out"
                                :source-map-timestamp true
-                               :external-config      {:re-frisk {:enabled true}}
-
+                               :external-config       {:re-frisk {:enabled     true
+                                                                 :script-path "js/compiled/whats_up_doc.js"}}
 
                                ;; To console.log CLJS data-structures make sure you enable devtools in Chrome
                                ;; https://github.com/binaryage/cljs-devtools
