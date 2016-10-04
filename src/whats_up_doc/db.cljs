@@ -3,5 +3,6 @@
 (def initial-state
   {:font-size             16
    :github-files          {}
+   :github-folders        {}
    :reading-frame-content {}
    })

@@ -11,8 +11,7 @@
 (export-debugger!)
 
 (defn mount-root []
-  (reagent/render [views/main]
-                  (js/document.getElementById "app")))
+  (reagent/render [views/main] (js/document.getElementById "app")))
 
 
 ;; TODO - specify map of options that can be called from JS
@@ -35,10 +34,10 @@
 ;; What kind of error messages are reasonable for end users to see?
 
 
-;; TODO -  Refer to Clojure Applied to figure out how I want to pass in the parameters
+;; TODO -  Refer to Clojure Applied to figure out how I want to pass in the options arguments
 (defn ^:export run
   [options]
-  (re-frame/dispatch-sync [:initialize (js->clj options)])
-  (re-frisk/enable-re-frisk! {:x 920 :y 0})
+  (re-frame/dispatch-sync [:initialize (js->clj options :keywordize-keys true)])
+  (re-frisk/enable-re-frisk! {:x 300 :y 0})
   (mount-root))
 

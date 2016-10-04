@@ -3,31 +3,39 @@
             [day8.re-frame.http-fx]
             [ajax.core :as ajax]
             [whats-up-doc.db :as db]
-            [whats-up-doc.github :as github-api]))
+            [whats-up-doc.github-fx :as github-api]
+            [whats-up-doc.fetch-link-fx]
+            ))
+
+;(re-frame/reg-event-fx :fx-testing
+;                       (fn [cofx args]
+;                         (println ":fx-testing cofx: " cofx)
+;                         (println ":fx-testing args: " args)
+;                         {:db               (:db cofx)
+;                          :internal-link-fx {:root      "root"
+;                                             :something "else"}
+;                          :root-file-fx     {:url ()}}
+;                         ))
+;
+;(re-frame/dispatch [:fx-testing "args" "testing"])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Initialize Application Data ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(re-frame/dispatch [:initialize])
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
   :initialize
-  (fn [db [_ options]]
-    ;(println "Initialization Options: " options)
-    ;(println "db at Init: " db)
-    ;(println "root_doc: " (get options "root_doc"))
+  (fn [{:keys [db]} [_ options]]
+    {:db                (if (empty? db)
+                          (merge db db/initial-state)
+                          db)
+     :github/fetch-root (:root options)}))
 
-
-
-    (if (and (empty? db) (get options "root_doc"))
-      (do
-        (re-frame/dispatch [:fetch-github-file (get options "root_doc")])
-        (merge db db/initial-state)))
-    db))
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Github Fetching ;;
 ;;;;;;;;;;;;;;;;;;;;;
+
 
 ;; TODO - Any place for an interceptor here?
 ;; TODO - Use event-fx instead of event-db or something else?
