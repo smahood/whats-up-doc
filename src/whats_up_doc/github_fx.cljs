@@ -106,6 +106,7 @@
 (re-frame/reg-fx
   :github/root
   (fn [options]
+    (re-frisk/add-in-data [:debug :github :github/root] {:options options})
     (re-frame/dispatch [:github/fetch-root-fx options])
     {}))
 

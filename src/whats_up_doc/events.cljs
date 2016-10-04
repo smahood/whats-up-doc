@@ -72,6 +72,17 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 ;
+;(re-frame/reg-event-fx
+;  :navigate-toc-link
+;  (fn [cofx]
+;    ()
+;    ;(println ":navigation-link-clicked child" child)
+;    ;(println ":navigation-link-clicked parent" parent)
+;    {:github/file (:url child)
+;     :db db}))
+
+
+;
 ;(re-frame/reg-event-db
 ;  :navigation-link-clicked
 ;  (fn [db [_ data parent]]
@@ -87,8 +98,8 @@
   (fn [{:keys [db]} [_ child parent]]
     ;(println ":navigation-link-clicked child" child)
     ;(println ":navigation-link-clicked parent" parent)
-
-    {:github/file (:url child)}))
+    {:github/file (:url child)
+     :db db}))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;

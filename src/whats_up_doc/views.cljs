@@ -3,7 +3,10 @@
             [re-frame.core :as re-frame]
             [re-frisk.core :refer-macros [def-view]]
             [camel-snake-kebab.core :as kebab]
-            [markdown.core :as markdown]))
+            [re-frisk.core :as re-frisk]
+            [markdown.core :as markdown]
+            [whats-up-doc.navigation-fx]
+            ))
 
 ;;;;;;;;;;;;;;
 ;; Top Menu ;;
@@ -33,68 +36,68 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Table of Contents ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
-
-(declare render-toc-item)
-
-
-(declare render-file-toc)
-
-
-(defn toc-react-key
-  "Generate key for react based on parent, type, and link.
-   Hopefully this will be unique, but some sort of uniqueness check
-   needs to be built in to the parser.
-  "
-  [parent type link]
-  (str parent "-" type "-" link))
-
-
-(defn render-heading
-  "Renders markdown headings"
-  [data parent]
-  [:li [:span {:style {:font-weight "bold"}} (:display data)]])
-
-
-(defn render-link
-  "Render markdown links"
-  [data parent]
-  [:ul.nested
-   [:li
-    [:a
-     {:href     "#"
-      :on-click #(re-frame/dispatch [:navigation-link-clicked data parent])}
-     (:display data)]
-    [:img.clickable
-     {:src   "icons/ic_expand_more_black_24px.svg"
-      :style {:height      "16px"
-              :margin-left "20px"}}]]])
-
-
-(defn render-visited-toc [file]
-  [:ul.nested
-   (for [x (:toc-data file)]
-     ^{:key (toc-react-key (:path file) (:type x) (:link x))} [render-toc-item x file nil])])
-
-
-(defn render-visited-link
-  "Render a link once it has been visited"
-  [data parent]
-  (let [github-files (re-frame/subscribe [:github-files])
-        file (val (first (filter #(= (:url data) (:url (val %))) @github-files)))]
-    [:ul.nested
-     [:li
-      [:a
-       {:href     "#"
-        :on-click #(re-frame/dispatch [:navigation-link-clicked data parent])}
-       (str (:display data))]
-      [:img.clickable
-       {:src   "icons/ic_expand_less_black_24px.svg"
-        :style {:height      "16px"
-                :margin-left "20px"}}]]
-     [render-visited-toc file]
-     ;; TODO - make it possible to call the same render-file-toc for visited links
-     ;[render-file-toc file]
-     ]))
+;
+;(declare render-toc-item)
+;
+;
+;(declare render-file-toc)
+;
+;
+;(defn toc-react-key
+;  "Generate key for react based on parent, type, and link.
+;   Hopefully this will be unique, but some sort of uniqueness check
+;   needs to be built in to the parser.
+;  "
+;  [parent type link]
+;  (str parent "-" type "-" link))
+;
+;
+;(defn render-heading
+;  "Renders markdown headings"
+;  [data parent]
+;  [:li [:span {:style {:font-weight "bold"}} (:display data)]])
+;
+;
+;(defn render-link
+;  "Render markdown links"
+;  [data parent]
+;  [:ul.nested
+;   [:li
+;    [:a
+;     {:href     "#"
+;      :on-click #(re-frame/dispatch [:navigation-link-clicked data parent])}
+;     (:display data)]
+;    [:img.clickable
+;     {:src   "icons/ic_expand_more_black_24px.svg"
+;      :style {:height      "16px"
+;              :margin-left "20px"}}]]])
+;
+;
+;(defn render-visited-toc [file]
+;  [:ul.nested
+;   (for [x (:toc-data file)]
+;     ^{:key (toc-react-key (:path file) (:type x) (:link x))} [render-toc-item x file nil])])
+;
+;
+;(defn render-visited-link
+;  "Render a link once it has been visited"
+;  [data parent]
+;  (let [github-files (re-frame/subscribe [:github-files])
+;        file (val (first (filter #(= (:url data) (:url (val %))) @github-files)))]
+;    [:ul.nested
+;     [:li
+;      [:a
+;       {:href     "#"
+;        :on-click #(re-frame/dispatch [:navigation-link-clicked data parent])}
+;       (str (:display data))]
+;      [:img.clickable
+;       {:src   "icons/ic_expand_less_black_24px.svg"
+;        :style {:height      "16px"
+;                :margin-left "20px"}}]]
+;     [render-visited-toc file]
+;     ;; TODO - make it possible to call the same render-file-toc for visited links
+;     ;[render-file-toc file]
+;     ]))
 
 ;; TODO - When link is loaded from root doc, add 2 more data keys - expanded (default false)
 ;; and loaded (or data)
@@ -102,61 +105,76 @@
 ;; then expand the link.
 
 
+;
+;(defn render-toc-item [item parent visited-link?]
+;  (cond
+;    (= (:type item) "heading") [render-heading item parent]
+;    (and (= (:type item) "link") (nil? visited-link?))
+;    [render-link item parent]
+;    ;(and (= (:type item) "link") visited-link?)
+;    ;[render-visited-link item parent]
+;    ))
 
-(defn render-toc-item [item parent visited-link?]
-  (cond
-    (= (:type item) "heading") [render-heading item parent]
-    (and (= (:type item) "link") (nil? visited-link?))
-    [render-link item parent]
-    ;(and (= (:type item) "link") visited-link?)
-    ;[render-visited-link item parent]
-    ))
+;
+;(defn render-file-toc [file-data]
+;  (let [github-files (re-frame/subscribe [:github-files])
+;        distinct-filenames (set (map #(:name (val %)) @github-files))]
+;    [:ul
+;     [:li "File TOC"]
+;     (for [x (:toc-data file-data)]
+;       (let [visited-link? (distinct-filenames (:link x))
+;             react-key (toc-react-key (:path file-data) (:type x) (:link x))]
+;         ^{:key react-key} [render-toc-item x file-data visited-link?]))]))
+;
+;
+;(defn render-full-toc [file-data]
+;  (if file-data
+;    [render-file-toc file-data]
+;    [:li "No file data"]))
+;
+;
+;(defn table-of-contents-old [root-key]
+;  (let [github-files (re-frame/subscribe [:github-files])]
+;    (println (root-key @github-files))
+;    [:ul
+;     [:li (str root-key)]
+;     [render-full-toc (root-key @github-files)]]))
 
 
-(defn render-file-toc [file-data]
-  (let [github-files (re-frame/subscribe [:github-files])
-        distinct-filenames (set (map #(:name (val %)) @github-files))]
-    [:ul
-     [:li "File TOC"]
-     (for [x (:toc-data file-data)]
-       (let [visited-link? (distinct-filenames (:link x))
-             react-key (toc-react-key (:path file-data) (:type x) (:link x))]
-         ^{:key react-key} [render-toc-item x file-data visited-link?]))]))
-
-
-(defn render-full-toc [file-data]
-  (if file-data
-    [render-file-toc file-data]
-    [:li "No file data"]))
-
-
-(defn table-of-contents-old [root-key]
-  (let [github-files (re-frame/subscribe [:github-files])]
-    (println (root-key @github-files))
-    [:ul
-     [:li (str root-key)]
-     [render-full-toc (root-key @github-files)]]))
-
+;;;;;;;;;;;;;;;;;;;;;;;
+;; Table of Contents ;;
+;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (defn render-toc-heading
   "Renders markdown headings"
-  [data parent]
-  [:li [:span {:style {:font-weight "bold"}} (:display data)]])
+  [entry]
+  (re-frisk/add-in-data [:debug :toc :render-toc-heading] entry)
+  [:li.toc-entry.heading [:span {:style {:font-weight "bold"}} (:display entry)]])
 
 
+(defn render-toc-link
+  "Renders markdown links"
+  [entry]
+  (re-frisk/add-in-data [:debug :toc :render-toc-link] entry)
+  [:ul.nested
+   [:li
+    [:a
+     {:href     "#"
+      :on-click #(re-frame/dispatch [:toc/navigate-fx (:url entry)])}
+     (:display entry)]
+    [:img.clickable
+     {:src   "icons/ic_expand_more_black_24px.svg"
+      :style {:height      "16px"
+              :margin-left "20px"}}]]])
 
 
 (defn render-toc-entry [entry]
-  (println entry)
   (cond
-    (= (:type entry) "heading") [:li "Heading - " (str entry)]
-    (= (:type entry) "link") [:li "Link - " (str entry)]
+    (= (:type entry) "heading") [render-toc-heading entry]
+    (= (:type entry) "link") [render-toc-link entry]
     (= [:type entry] "") [:li "No Type" (str entry)]
-    :else [:li "Other Type - " (:type entry) (str entry)])
-  )
-
-
+    :else [:li "Other Type - " (:type entry) (str entry)]))
 
 
 (defn table-of-contents []
@@ -167,6 +185,7 @@
        (for [entry @toc-panel]
          ^{:key (str ":toc-panel/" (.indexOf @toc-panel entry))}
          [render-toc-entry entry]))]))
+
 
 ;;;;;;;;;;;;;;;;;;;
 ;; Reading Frame ;;
