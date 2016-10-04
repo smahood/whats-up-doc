@@ -15,6 +15,14 @@
 
 (re-frame/reg-event-fx
   :toc/navigate-fx
-  (fn [cofx]
-    (re-frisk/add-in-data [:debug :toc :toc/navigate-fx] {:cofx cofx})
-    {}))
+  (fn [{:keys [db]} [_ toc-entry]]
+    (re-frisk/add-in-data [:debug :toc :toc/navigate-fx] {:db        db
+                                                          :toc-entry toc-entry})
+    (let [new-toc-entry (assoc toc-entry :expanded true)]
+      {:github/file (:url toc-entry)
+       :db          (assoc db
+                      :toc-panel
+                      (assoc
+                        (:toc-panel db)
+                        (:index toc-entry)
+                        new-toc-entry))})))

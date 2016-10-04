@@ -4,7 +4,7 @@
   {:font-size              16
    :github-files           {}
    :github-folders         {}
-   :toc-panel              {}
+   :toc-panel              []
    :reading-panel          {}
    :initialization-options {}
    })

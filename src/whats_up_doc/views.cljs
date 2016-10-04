@@ -144,6 +144,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Table of Contents ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
+(declare render-toc-entry)
 
 
 (defn render-toc-heading
@@ -152,21 +153,51 @@
   (re-frisk/add-in-data [:debug :toc :render-toc-heading] entry)
   [:li.toc-entry.heading [:span {:style {:font-weight "bold"}} (:display entry)]])
 
+(defn render-expanded-toc-link [entry]
+  (let [github-files (re-frame/subscribe [:github-files])]
+    (fn []
+      (re-frisk/add-in-data [:debug :toc :render-expanded-toc-link] {:entry        entry
+                                                                     :github-files @github-files})
+      [:ul.nested
+       [:li
+        [:a
+         {:href     "#"
+          :on-click #(re-frame/dispatch [:toc/navigate-fx entry])}
+         (:display entry) " Expanded!"]
+        [:img.clickable
+         {:src   "icons/ic_expand_more_black_24px.svg"
+          :style {:height      "16px"
+                  :margin-left "20px"}}]
+        [:ul.nested
+         (for [child-entry (:toc-data ((:path entry) @github-files))]
+           (let [key (str "toc-"(:path entry) "/" (:index entry))]
+             (println "render-expanded-toc-link: " key)
+             ^{:key key}
+             [render-toc-entry child-entry]))]
+
+        ;(let [child-toc (:path @github-files)]
+        ;  (println child-toc)
+        ;  [:ul.nested
+        ;   [:li (str child-toc)]])
+
+        ]])))
+
 
 (defn render-toc-link
   "Renders markdown links"
   [entry]
   (re-frisk/add-in-data [:debug :toc :render-toc-link] entry)
-  [:ul.nested
-   [:li
-    [:a
-     {:href     "#"
-      :on-click #(re-frame/dispatch [:toc/navigate-fx (:url entry)])}
-     (:display entry)]
-    [:img.clickable
-     {:src   "icons/ic_expand_more_black_24px.svg"
-      :style {:height      "16px"
-              :margin-left "20px"}}]]])
+  (if (:expanded entry) [render-expanded-toc-link entry]
+                        [:ul.nested
+                         [:li
+                          [:a
+                           {:href     "#"
+                            :on-click #(re-frame/dispatch [:toc/navigate-fx entry])}
+                           (:display entry)]
+                          [:img.clickable
+                           {:src   "icons/ic_expand_more_black_24px.svg"
+                            :style {:height      "16px"
+                                    :margin-left "20px"}}]]]))
 
 
 (defn render-toc-entry [entry]
@@ -183,7 +214,7 @@
     [:ul
      (doall
        (for [entry @toc-panel]
-         ^{:key (str ":toc-panel/" (.indexOf @toc-panel entry))}
+         ^{:key (str ":toc-panel/" (:index entry))}
          [render-toc-entry entry]))]))
 
 

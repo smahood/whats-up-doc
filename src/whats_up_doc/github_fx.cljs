@@ -11,7 +11,8 @@
   (clojure.string/join "/" (drop-last (clojure.string/split url #"/"))))
 
 (defn get-folder-keyword [url]
-  (keyword (last (clojure.string/split "https://api.github.com/repos/Day8/re-frame/contents/docs" #"/contents/"))))
+  (keyword (last (clojure.string/split url #"/contents/"))))
+
 
 (defn base64-decode
   "Decode a base64 string"
@@ -47,33 +48,46 @@
 (defn build-toc-data
   "Parses the markdown from a single file into a map that can be used to build the table of contents"
   [parent markdown-content]
-  (let [extracted-strings (extract-toc-base-data markdown-content)]
-    (for [x extracted-strings]
-      (cond
-        (re-matches #"#{1,6}.+" x)
-        (let [display (clojure.string/trim (clojure.string/replace x #"#{1,6}" ""))
-              link (kebab/->kebab-case display)]
-          {:type     "heading"
-           :markdown x
-           :display  display
-           :link     link
-           :expanded true})
-        (re-matches #"\[.*\]\(.*\)" x)
-        (let [title-str (re-find #"\[.*\]" x)
-              link-str (re-find #"\(.*\)" x)
-              link (subs link-str 1 (- (count link-str) 1))]
-          {:type       "link"
-           :markdown   x
-           :display    (subs title-str 1 (- (count title-str) 1))
-           :link       link
-           :url        (build-child-url parent link)
-           :child-data {}                                   ;; TODO - can I store the child data here? Is there a point?
-           :expanded   false})))))
+
+  (re-frisk/add-in-data [:debug :github :github/build-toc-data] {:parent           parent
+                                                                 :markdown-content markdown-content})
+  (into []
+        (let [extracted-strings (extract-toc-base-data markdown-content)]
+          (for [x extracted-strings]
+            (let [index (.indexOf extracted-strings x)]
+              (cond
+                (re-matches #"#{1,6}.+" x)
+                (let [display (clojure.string/trim (clojure.string/replace x #"#{1,6}" ""))
+                      link (kebab/->kebab-case display)]
+                  {:type     "heading"
+                   :markdown x
+                   :display  display
+                   :link     link
+                   :expanded true
+                   :index    index
+                   })
+                (re-matches #"\[.*\]\(.*\)" x)
+                (let [title-str (re-find #"\[.*\]" x)
+                      link-str (re-find #"\(.*\)" x)
+                      link (subs link-str 1 (- (count link-str) 1))
+                      folder (get-folder-from-file (:path parent))
+                      path (keyword (clojure.string/join "/" [folder link]))]
+                  {:type       "link"
+                   :markdown   x
+                   :display    (subs title-str 1 (- (count title-str) 1))
+                   :link       link
+                   :url        (build-child-url parent link)
+                   :child-data {}                           ;; TODO - can I store the child data here? Is there a point?
+                   :index      index
+                   :folder     folder
+                   :path       path
+                :expanded false})))))))
 
 
 (defn transform-file-result
   "Transform the result returned from the github API for individual files"
   [result]
+  (re-frisk/add-in-data [:debug :github :github/transform-file-result] {:result result})
   (let [markdown (decode-markdown result)
         toc-data (build-toc-data result markdown)]
     (if (= (:type result) "file")
@@ -116,8 +130,7 @@
   (fn [{:keys [db]} [_ root]]
     (re-frisk/add-in-data [:debug :github :github/fetch-root-fx] {:db            db
                                                                   :root          root
-                                                                  :github-folder (get-folder-from-file root)
-                                                                  })
+                                                                  :github-folder (get-folder-from-file root)})
     {:http-xhrio    {:method          :get
                      :uri             root
                      :response-format (ajax/json-response-format {:keywords? true})
