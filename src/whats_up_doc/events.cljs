@@ -1,23 +1,8 @@
 (ns whats-up-doc.events
   (:require [re-frame.core :as re-frame]
-            [day8.re-frame.http-fx]
-            [ajax.core :as ajax]
             [whats-up-doc.db :as db]
-            [whats-up-doc.github-fx :as github-api]
-            [whats-up-doc.fetch-link-fx]
-            ))
+            [whats-up-doc.github-fx]))
 
-;(re-frame/reg-event-fx :fx-testing
-;                       (fn [cofx args]
-;                         (println ":fx-testing cofx: " cofx)
-;                         (println ":fx-testing args: " args)
-;                         {:db               (:db cofx)
-;                          :internal-link-fx {:root      "root"
-;                                             :something "else"}
-;                          :root-file-fx     {:url ()}}
-;                         ))
-;
-;(re-frame/dispatch [:fx-testing "args" "testing"])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Initialize Application Data ;;
@@ -26,10 +11,21 @@
 (re-frame/reg-event-fx
   :initialize
   (fn [{:keys [db]} [_ options]]
-    {:db                (if (empty? db)
-                          (merge db db/initial-state)
-                          db)
-     :github/fetch-root (:root options)}))
+    {:db          (if (empty? db)
+                    (merge db db/initial-state {:initialization-options options})
+                    db)
+     :github/root (:root options)}))
+
+;;;;;;;;;;;;;;;;;;;;
+;; Error Handling ;;
+;;;;;;;;;;;;;;;;;;;;
+
+(re-frame/reg-event-db
+  :display-error
+  (fn [db event]
+    ;; TODO - probably change this to an -fx handler
+    ;; TODO - change error display to something nicer
+    (println "Error: " event)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;
@@ -43,47 +39,56 @@
 ;; when contents are loaded next time, check against the SHA and load the local
 ;; copy if they are equal
 
-
-(re-frame/reg-event-db
-  :fetch-github-file-success
-  (fn [db [_ result key]]
-    (assoc-in db
-              [:github-files (keyword (:path result))]
-              (github-api/transform-api-result result))))
-
-
-(re-frame/reg-event-db
-  :fetch-github-file-failure
-  (fn [db _]
-    ;; TODO - proper error messages, error handling, etc etc
-    (println "Failure when fetching github file")
-    db))
-
-
-(re-frame/reg-event-fx
-  :fetch-github-file
-  (fn [{:keys [db]} [_ uri]]
-    {:http-xhrio {:method          :get
-                  :uri             uri
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [:fetch-github-file-success]
-                  :on-failure      [:fetch-github-file-failure]}}))
-
+;
+;(re-frame/reg-event-db
+;  :fetch-github-file-success
+;  (println ":fetch-github-file-success")
+;  (fn [db [_ result key]]
+;    (assoc-in db
+;              [:github-files (keyword (:path result))]
+;              (github-api/transform-api-result result))))
+;
+;
+;(re-frame/reg-event-db
+;  :fetch-github-file-failure
+;  (fn [db _]
+;    ;; TODO - proper error messages, error handling, etc etc
+;    (println "Failure when fetching github file")
+;    db))
+;
+;
+;(re-frame/reg-event-fx
+;  :fetch-github-file
+;  (fn [{:keys [db]} [_ uri]]
+;    {:http-xhrio {:method          :get
+;                  :uri             uri
+;                  :response-format (ajax/json-response-format {:keywords? true})
+;                  :on-success      [:fetch-github-file-success]
+;                  :on-failure      [:fetch-github-file-failure]}}))
+;
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Navigation Events ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
 
+;
+;(re-frame/reg-event-db
+;  :navigation-link-clicked
+;  (fn [db [_ data parent]]
+;    (let [s (:url parent)
+;          match (first (rest (clojure.string/split (:path parent) "/")))
+;          replacement (:link data)
+;          url (clojure.string/replace s match replacement)]
+;      (re-frame/dispatch [:github/fetch-file-fx url]))
+;    db))
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
   :navigation-link-clicked
-  (fn [db [_ data parent]]
-    (let [s (:url parent)
-          match (first (rest (clojure.string/split (:path parent) "/")))
-          replacement (:link data)
-          url (clojure.string/replace s match replacement)]
-      (re-frame/dispatch [:fetch-github-file url]))
-    db))
+  (fn [{:keys [db]} [_ child parent]]
+    ;(println ":navigation-link-clicked child" child)
+    ;(println ":navigation-link-clicked parent" parent)
+
+    {:github/file (:url child)}))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -100,3 +105,5 @@
   :decrease-font-size
   (fn [db _]
     (assoc db :font-size (- (:font-size db) 1))))
+
+

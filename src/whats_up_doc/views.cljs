@@ -108,19 +108,20 @@
     (= (:type item) "heading") [render-heading item parent]
     (and (= (:type item) "link") (nil? visited-link?))
     [render-link item parent]
-    (and (= (:type item) "link") visited-link?)
-    [render-visited-link item parent]))
+    ;(and (= (:type item) "link") visited-link?)
+    ;[render-visited-link item parent]
+    ))
 
 
-(def-view render-file-toc [file-data]
-          (let [github-files (re-frame/subscribe [:github-files])
-                distinct-filenames (set (map #(:name (val %)) @github-files))]
-            [:ul
-             [:li "File TOC"]
-             (for [x (:toc-data file-data)]
-               (let [visited-link? (distinct-filenames (:link x))
-                     react-key (toc-react-key (:path file-data) (:type x) (:link x))]
-                 ^{:key react-key} [render-toc-item x file-data visited-link?]))]))
+(defn render-file-toc [file-data]
+  (let [github-files (re-frame/subscribe [:github-files])
+        distinct-filenames (set (map #(:name (val %)) @github-files))]
+    [:ul
+     [:li "File TOC"]
+     (for [x (:toc-data file-data)]
+       (let [visited-link? (distinct-filenames (:link x))
+             react-key (toc-react-key (:path file-data) (:type x) (:link x))]
+         ^{:key react-key} [render-toc-item x file-data visited-link?]))]))
 
 
 (defn render-full-toc [file-data]
@@ -129,22 +130,56 @@
     [:li "No file data"]))
 
 
-(defn table-of-contents [root-key]
+(defn table-of-contents-old [root-key]
   (let [github-files (re-frame/subscribe [:github-files])]
+    (println (root-key @github-files))
     [:ul
      [:li (str root-key)]
      [render-full-toc (root-key @github-files)]]))
+
+
+
+(defn render-toc-heading
+  "Renders markdown headings"
+  [data parent]
+  [:li [:span {:style {:font-weight "bold"}} (:display data)]])
+
+
+
+
+(defn render-toc-entry [entry]
+  (println entry)
+  (cond
+    (= (:type entry) "heading") [:li "Heading - " (str entry)]
+    (= (:type entry) "link") [:li "Link - " (str entry)]
+    (= [:type entry] "") [:li "No Type" (str entry)]
+    :else [:li "Other Type - " (:type entry) (str entry)])
+  )
+
+
+
+
+(defn table-of-contents []
+  (let [github-files (re-frame/subscribe [:github-files])
+        toc-panel (re-frame/subscribe [:toc-panel])]
+    [:ul
+     (doall
+       (for [entry @toc-panel]
+         ^{:key (str ":toc-panel/" (.indexOf @toc-panel entry))}
+         [render-toc-entry entry]))]))
 
 ;;;;;;;;;;;;;;;;;;;
 ;; Reading Frame ;;
 ;;;;;;;;;;;;;;;;;;;
 
 
-(defn reading-frame
+(defn render-reading-panel
   "Render the reading frame"
   []
   (let [github-files (re-frame/subscribe [:github-files])
-        font-size (re-frame/subscribe [:font-size])]
+        font-size (re-frame/subscribe [:font-size])
+        toc-panel (re-frame/subscribe [:toc-panel])
+        reading-panel (re-frame/subscribe [:reading-panel])]
     [:div.reading-frame.col-xs-12-12.col-sm-9-12.col-md-9-12.col-lg-8-12
      [:div
       {:style {:padding-left "10px"
@@ -177,5 +212,8 @@
    [:div.frow.justify-start.items-stretch
     [:div.nav-sidebar.hidden-xs.col-sm-3-12.col-md-3-12.col-lg-3-12
      {:style {:border "solid 2px black"}}
-     [table-of-contents :docs/README.md]]
-    [reading-frame]]])
+     ;     [table-of-contents-old :docs/README.md]
+     [table-of-contents]
+
+     ]
+    [render-reading-panel]]])

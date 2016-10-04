@@ -9,10 +9,14 @@
 
 
 (re-frame/reg-sub
-  :reading-frame-content
+  :reading-panel
   (fn [db _]
-    (:reading-frame-content db)))
+    (:reading-panel db)))
 
+(re-frame/reg-sub
+  :toc-panel
+  (fn [db _]
+    (:toc-panel db)))
 
 (re-frame/reg-sub
   :github-files

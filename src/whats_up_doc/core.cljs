@@ -37,7 +37,8 @@
 ;; TODO -  Refer to Clojure Applied to figure out how I want to pass in the options arguments
 (defn ^:export run
   [options]
-  (re-frame/dispatch-sync [:initialize (js->clj options :keywordize-keys true)])
+  (let [clj-options (js->clj options :keywordize-keys true)]
+  (re-frame/dispatch-sync [:initialize clj-options])
   (re-frisk/enable-re-frisk! {:x 300 :y 0})
-  (mount-root))
+  (mount-root)))
 
