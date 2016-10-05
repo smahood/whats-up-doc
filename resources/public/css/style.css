@@ -1,52 +1,64 @@
-.nav-sidebar {
-
+body{
+    margin: 0 auto;
+    margin-left: 10px;
+    background: #DFDDC2;
+    font: Tahoma, Helvetica, Arial, Sans-Serif;
 }
+
+
+.main {}
+
+.menu-panel {min-height: 58px;}
+
+.toc-panel {}
+
+.reading-panel {};
+
+
+
+
+h1, h2, h3, h4 {
+	display: block; text-decoration: none;
+	font: Helvetica, Arial, Sans-Serif;
+
+ }
+
+h1 {
+  font-size: 1.8em;
+ }
+
+h2 {
+  font-size: 1.6em;
+ }
+h3 {
+  font-size: 1.4em;
+ }
+h4 {
+  font-size: 1.2em;
+ }
+
+pre {
+    margin: 10px;
+    background: #363427;
+    padding: 10px;
+    white-space: pre-wrap;
+	color: #F3EA94;
+	border-radius: 10px;
+}
+
+a {
+	text-decoration: none;
+	font: 1.2em Helvetica, Arial, Sans-Serif;
+	color: #001155;
+	 }
+
+a:hover {
+        color: black;
+  }
+
 
 ul.nested {margin-left: 10px;}
-
-.top-menu {
-min-height: 58px;
-}
-
 
 ul > li {margin-left: 4px;
 margin-bottom: 5px;}
 
-
-.reading-frame {
-max-width: 80ch;
-border: "solid 2px black"
-}
-
-
-
-/* XS */
-@media (max-width: 767px) {
-
-
-}
-
-/* XS, SM */
-@media (max-width: 991px) {
-
-}
-
-/* SM */
-@media (min-width: 768px) and (max-width: 991px) {
-
-}
-
-/* MD */
-@media (min-width: 992px) and (max-width: 1199px) {
-
-}
-
-/* MD, LG */
-@media (min-width: 992px) {
-
-}
-
-/* LG */
-@media (min-width: 1200px) {
-
-}

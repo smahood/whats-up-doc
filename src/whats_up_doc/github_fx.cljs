@@ -119,6 +119,18 @@
      :folder-count (count folders)
      :file-size    (reduce + (map :size files))}))
 
+
+(defn inline-reading-panel []
+  ;; TODO - put together data for inline reading panel
+  ;; Order of content should be based on the ToC
+  ;; - Title of First Page
+  ;; --- Content of Page
+  ;; ---------------------
+  ;; - Title of Second Page
+  ;; --- Content of Second Page
+  ""
+  )
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Fetch root document ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -257,30 +269,3 @@
     (re-frisk/add-in-data [:debug :github :github/fetch-folder-failure] {:db db :folder folder :result result})
     (re-frame/dispatch [:display-error result])
     {}))
-
-
-;(re-frame/reg-event-db
-;  :fetch-github-file-success
-;  (fn [db [_ result key]]
-;    (assoc-in db
-;              [:github-files (keyword (:path result))]
-;              (github-api/transform-api-result result))))
-;
-;
-;(re-frame/reg-event-db
-;  :fetch-github-file-failure
-;  (fn [db _]
-;    ;; TODO - proper error messages, error handling, etc etc
-;    (println "Failure when fetching github file")
-;    db))
-;
-;
-;(re-frame/reg-event-fx
-;  :fetch-github-file
-;  (fn [{:keys [db]} [_ uri]]
-;    {:http-xhrio {:method          :get
-;                  :uri             uri
-;                  :response-format (ajax/json-response-format {:keywords? true})
-;                  :on-success      [:fetch-github-file-success]
-;                  :on-failure      [:fetch-github-file-failure]}}))
-;
