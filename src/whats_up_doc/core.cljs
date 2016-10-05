@@ -10,32 +10,11 @@
 (enable-console-print!)
 (export-debugger!)
 
+
 (defn mount-root []
   (reagent/render [views/main] (js/document.getElementById "app")))
 
 
-;; TODO - specify map of options that can be called from JS
-;; Loading - Lazy or Eager
-;; Root document - pass root doc in here, mandatory field
-;; Option to display all docs as single stream or separate files
-;; Would also be nice to have some graphical options - starting font size,
-;; CSS classes, etc - or ways to override CSS classes so that instead of
-;; using the default class you can provide your own classes or something
-;; It would be very cool to be able to insert interceptors or middleware
-;; that can be run when certain things are done (parsing or rendering the
-;; TOC or markdown, etc.) - it would be interesting to think about whether
-;; a plugin style architecture is at all reasonable, where all the rendering
-;; or parsing is a specific plugin, or can plug in different fetching and
-;; file parsing rules or something like that.
-;; Debug or pre-deployment mode - check what kind of download sizes there
-;; are, run against specs, etc. - maybe hook into frisk or similar
-;; Setup nice error messages for malformed specs like figwheel has
-;; for the config options
-;; What kind of error messages are reasonable for end users to see?
-;; "toc-navigation": "inline or ? (block? reading? add-to-toc, replace-reading, etc?)"
-
-
-;; TODO -  Refer to Clojure Applied to figure out how I want to pass in and name the options arguments
 (defn ^:export run
   [options]
   (let [clj-options (js->clj options :keywordize-keys true)]

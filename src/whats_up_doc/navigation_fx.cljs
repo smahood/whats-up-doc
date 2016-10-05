@@ -28,3 +28,10 @@
                         (:toc-panel db)
                         (:index toc-entry)
                         new-toc-entry))})))
+
+
+
+(re-frame/reg-event-fx
+  :reading/navigate-fx
+  (fn [cofx]
+    {}))
