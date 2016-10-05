@@ -5,9 +5,10 @@
    :github-files           {}
    :github-folders         {}
    :toc-panel              []
-   :reading-panel          {}
+   :reading-panel          ""
    :initialization-options {}
    :debug                  {}
+   :initialized?           nil
    })
 
 

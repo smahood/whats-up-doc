@@ -22,3 +22,8 @@
   :github-files
   (fn [db _]
     (:github-files db)))
+
+(re-frame/reg-sub
+  :initialized?
+  (fn [db _]
+    (:initialized? db)))

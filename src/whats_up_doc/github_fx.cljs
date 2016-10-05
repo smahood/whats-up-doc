@@ -152,6 +152,7 @@
           (assoc-in [:github-files (keyword (:path result))] transformed-result)
           (assoc :toc-panel (:toc-data transformed-result))
           (assoc :reading-panel (:markdown transformed-result))
+          (assoc :initialized? true)
           ))))
 
 
