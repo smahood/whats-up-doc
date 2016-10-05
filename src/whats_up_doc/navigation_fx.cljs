@@ -23,12 +23,6 @@
       {})))
 
 
-
-
-
-
-
-
 (re-frame/reg-event-fx
   :reading/navigate-fx
   (fn [cofx]

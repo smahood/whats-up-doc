@@ -10,6 +10,8 @@
 (defn get-folder-from-file [url]
   (clojure.string/join "/" (drop-last (clojure.string/split url #"/"))))
 
+
+
 (defn get-branch-from-file [url]
   (let [vec (clojure.string/split url "?")
         branch (if (< 1 (count vec)) (str "?" (last vec)) "")]
@@ -140,7 +142,7 @@
                      :response-format (ajax/json-response-format {:keywords? true})
                      :on-success      [:github/fetch-root-success root]
                      :on-failure      [:github/fetch-root-failure root]}
-     :github/folder root}))
+     :github/folder (str (get-folder-from-file root) (get-branch-from-file root))}))
 
 
 (re-frame/reg-event-db
@@ -227,9 +229,9 @@
 (re-frame/reg-event-fx
   :github/fetch-folder-fx
   (fn [{:keys [db]} [_ folder]]
-    (re-frisk/add-in-data [:debug :github :github/fetch-folder-fx] {:db db :folder folder :uri (str (get-folder-from-file folder) (get-branch-from-file folder))})
+    (re-frisk/add-in-data [:debug :github :github/fetch-folder-fx] {:db db :folder folder})
     {:http-xhrio {:method          :get
-                  :uri             (str (get-folder-from-file folder) (get-branch-from-file folder))
+                  :uri             folder
                   :response-format (ajax/json-response-format {:keywords? true})
                   :on-success      [:github/fetch-folder-success folder]
                   :on-failure      [:github/fetch-folder-failure folder]}}))
@@ -241,7 +243,9 @@
     (re-frisk/add-in-data [:debug :github :github/fetch-folder-success] {:db db :folder folder :result result})
     (if (= "eager" (get-in db [:initialization-options :loading]))
       (doseq [file result]
-        (if (= "file" (:type file)) (re-frame/dispatch [:github/fetch-file-fx (:url file)]))))
+        (cond (= "file" (:type file)) (re-frame/dispatch [:github/fetch-file-fx (:url file)])
+              (= "dir" (:type file)) (re-frame/dispatch [:github/fetch-folder-fx (:url file)])
+              )))
     ;; TODO - should I be checking stale files whenever a folder is loaded?
     (assoc-in db [:github-folders (get-folder-keyword folder)]
               (transform-folder-result folder result))))
