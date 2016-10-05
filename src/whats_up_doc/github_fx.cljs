@@ -53,6 +53,8 @@
     (clojure.string/replace s match replacement)))
 
 
+
+
 (defn build-toc-data
   "Parses the markdown from a single file into a map that can be used to build the table of contents"
   [parent markdown-content]
@@ -62,7 +64,7 @@
   (into []
         (let [extracted-strings (extract-toc-base-data markdown-content)]
           (for [x extracted-strings]
-            (let [index (.indexOf extracted-strings x)]
+            (let [index (+ 1 (.indexOf extracted-strings x))]
               (cond
                 (re-matches #"#{1,6}.+" x)
                 (let [display (clojure.string/trim (clojure.string/replace x #"#{1,6}" ""))
@@ -160,11 +162,21 @@
 (re-frame/reg-event-db
   :github/fetch-root-success
   (fn [db [_ root result]]
-    (re-frisk/add-in-data [:debug :github :github/fetch-root-success] {:db db :root root :result result})
-    (let [transformed-result (transform-file-result result)]
+    (let [transformed-result (transform-file-result result)
+          toc-header {:type     "link"
+                      :markdown (str "[Table of Contents](" (:name transformed-result) ")")
+                      :display  "Table of Contents"
+                      :link     (:name transformed-result)
+                      :url (:url transformed-result)
+                      :path (keyword (:path transformed-result))
+                      :index 0}]
+      (re-frisk/add-in-data [:debug :github :github/fetch-root-success] {:db                 db
+                                                                         :root               root
+                                                                         :result             result
+                                                                         :transformed-result transformed-result})
       (-> db
           (assoc-in [:github-files (keyword (:path result))] transformed-result)
-          (assoc :toc-panel (:toc-data transformed-result))
+          (assoc :toc-panel (into [toc-header] (:toc-data transformed-result)))
           (assoc :reading-panel (:markdown transformed-result))
           (assoc :initialized? true)
           ))))

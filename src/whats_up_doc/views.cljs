@@ -41,6 +41,18 @@
     (= [:type entry] "") [:li "No Type" (str entry)]
     :else [:li "Other Type - " (:type entry) (str entry)]))
 
+(defn render-toc-title [entry]
+  (re-frisk/add-in-data [:debug :toc :render-toc-link] entry)
+  [:div {:style {:margin-top "10px"}}
+   [:a
+    {:style    {:margin-left "10px"
+                :font-size   "1.3em"}
+     :href     "#"
+     :on-click #(re-frame/dispatch [:toc/navigate-fx entry])}
+    (:display entry)]
+   [:hr]
+   ])
+
 
 (defn toc-panel []
   (let [toc-panel (re-frame/subscribe [:toc-panel])
@@ -49,12 +61,13 @@
      {:style {:border    "solid 2px black"
               :max-width "40ch"
               :font-size (str @font-size "px")}}
-     [:br]
-     [:br]
-     [:br]
+     [:div
+      ^{:key (str ":toc-panel/" (:index (first @toc-panel)))}
+      [render-toc-title (first @toc-panel)]]
      [:ul
+
       (doall
-        (for [entry @toc-panel]
+        (for [entry (rest @toc-panel)]
           ^{:key (str ":toc-panel/" (:index entry))}
           [render-toc-entry entry]))]]))
 
@@ -71,12 +84,12 @@
         font-size (re-frame/subscribe [:font-size])]
     [:div.reading-panel.col-xs-12-12.col-sm-9-12.col-md-9-12.col-lg-8-12
      [:div
-      {:style {:padding-left "10px"
-               :border       "solid 2px black"
-               :max-width    "80ch"
-               :border-left  "0px"
-               :font-size    (str @font-size "px")
-               :margin-right "10px"
+      {:style {:padding-left  "10px"
+               :border        "solid 2px black"
+               :max-width     "80ch"
+               :border-left   "0px"
+               :font-size     (str @font-size "px")
+               :margin-right  "10px"
                :padding-right "10px"}}
 
       [:div.frow.justify-end.items-stretch
@@ -86,9 +99,12 @@
        [:img.clickable {:src      "icons/ic_zoom_in_black_24px.svg"
                         :height   "24px"
                         :on-click #(re-frame/dispatch [:increase-font-size])}]]
-      [:div {:dangerouslySetInnerHTML {:__html (markdown/md->html @reading-panel
-                                                                  :heading-anchors true
-                                                                  :reference-links? true)}}]
+      [:div
+       {:style                   {:margin-top  "-24px"
+                                  :padding-top "0"}
+        :dangerouslySetInnerHTML {:__html (markdown/md->html @reading-panel
+                                                             :heading-anchors true
+                                                             :reference-links? true)}}]
       [:br]]]))
 
 ;;;;;;;;;;;;;;;;;;;;
