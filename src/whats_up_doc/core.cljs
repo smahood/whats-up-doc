@@ -32,9 +32,10 @@
 ;; Setup nice error messages for malformed specs like figwheel has
 ;; for the config options
 ;; What kind of error messages are reasonable for end users to see?
+;; "toc-navigation": "inline or ? (block? reading? add-to-toc, replace-reading, etc?)"
 
 
-;; TODO -  Refer to Clojure Applied to figure out how I want to pass in the options arguments
+;; TODO -  Refer to Clojure Applied to figure out how I want to pass in and name the options arguments
 (defn ^:export run
   [options]
   (let [clj-options (js->clj options :keywordize-keys true)]

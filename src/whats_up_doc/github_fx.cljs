@@ -5,7 +5,7 @@
             [day8.re-frame.http-fx]
             [re-frisk.core :as re-frisk]
             [camel-snake-kebab.core :as kebab]
-            ))
+            [whats-up-doc.markdown-fx :as markdown]))
 
 (defn get-folder-from-file [url]
   (clojure.string/join "/" (drop-last (clojure.string/split url #"/"))))
@@ -81,7 +81,7 @@
                    :index      index
                    :folder     folder
                    :path       path
-                :expanded false})))))))
+                   :expanded   false})))))))
 
 
 (defn transform-file-result
@@ -104,14 +104,12 @@
   (let [files (filter #(= "file" (:type %)) result)
         folders (filter #(= "dir" (:type %)) result)]
 
-    {:url     folder
-     :files   files
-     :folders folders
-     ;:file-count (count files)
-     ;:folder-count (count folders)
-     ;:file-size (reduce + (map :size files)
-
-     }))
+    {:url          folder
+     :files        files
+     :folders      folders
+     :file-count   (count files)
+     :folder-count (count folders)
+     :file-size    (reduce + (map :size files))}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Fetch root document ;;
@@ -232,6 +230,10 @@
   :github/fetch-folder-success
   (fn [db [_ folder result]]
     (re-frisk/add-in-data [:debug :github :github/fetch-folder-success] {:db db :folder folder :result result})
+    (println (get-in db [:initialization-options :loading]))
+    (if (= "eager" (get-in db [:initialization-options :loading]))
+      (doseq [file result]
+        (re-frame/dispatch [:github/fetch-file-fx (:url file)])))
     ;; TODO - should I be checking stale files whenever a folder is loaded?
     (assoc-in db [:github-folders (get-folder-keyword folder)]
               (transform-folder-result folder result))))
