@@ -18,16 +18,14 @@
   (fn [{:keys [db]} [_ toc-entry]]
     (re-frisk/add-in-data [:debug :toc :toc/navigate-fx] {:db        db
                                                           :toc-entry toc-entry})
-    (let [new-toc-entry
-          (if (:expanded toc-entry) (assoc toc-entry :expanded false)
-          (assoc toc-entry :expanded true))]
-      {:github/file (:url toc-entry)
-       :db          (assoc db
-                      :toc-panel
-                      (assoc
-                        (:toc-panel db)
-                        (:index toc-entry)
-                        new-toc-entry))})))
+    (if-let [file (get-in db [:github-files (:path toc-entry)])]
+      {:db (assoc db :reading-panel (:markdown file))}
+      {})))
+
+
+
+
+
 
 
 

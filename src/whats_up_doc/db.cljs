@@ -7,6 +7,7 @@
    :toc-panel              []
    :reading-panel          {}
    :initialization-options {}
+   :debug                  {}
    })
 
 

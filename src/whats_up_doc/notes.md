@@ -1,6 +1,18 @@
-### Notes 
+## Notes
 
-Random thoughts
+### Current Plan
+
+1. Build everything assuming eager loading
+-
+-
+1. Implement caching with localstorage
+1. Look at what needs to change for lazy loading (if anything)
+
+
+
+
+
+### Random thoughts
 
 Really, I want to be able to pass in the markdown and parse it into hiccup (for a nice view) - seems like overkill
 
