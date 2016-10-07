@@ -5,11 +5,11 @@
             [day8.re-frame.http-fx]
             [re-frisk.core :as re-frisk]
             [camel-snake-kebab.core :as kebab]
-            [whats-up-doc.markdown-fx :as markdown]))
+            [whats-up-doc.markdown-fx :as markdown]
+            [whats-up-doc.localstorage]))
 
 (defn get-folder-from-file [url]
   (clojure.string/join "/" (drop-last (clojure.string/split url #"/"))))
-
 
 
 (defn get-branch-from-file [url]
@@ -51,8 +51,6 @@
         match (first (rest (clojure.string/split (:path parent) "/")))
         replacement child]
     (clojure.string/replace s match replacement)))
-
-
 
 
 (defn build-toc-data
@@ -176,8 +174,9 @@
                                                                          :transformed-result transformed-result})
       (-> db
           (assoc-in [:github-files (keyword (:path result))] transformed-result)
-          (assoc :toc-panel (into [toc-header] (:toc-data transformed-result)))
-          (assoc :reading-panel (:markdown transformed-result))
+          (assoc-in [:toc-panel :toc-header] toc-header)
+          (assoc-in [:toc-panel :toc-entries] (:toc-data transformed-result))
+          (assoc-in [:reading-panel :markdown] (:markdown transformed-result))
           (assoc :initialized? true)
           ))))
 

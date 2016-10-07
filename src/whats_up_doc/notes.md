@@ -1,12 +1,30 @@
 ## Notes
 
+### Version 0.1.0
+
+- Size Estimate - 500 kb for site, 125 kb extra for all docs
+    - HTML - 1 KB
+    - Minified JS - 491 KB
+    - Logo - 6 KB
+    - Icons - 1 KB
+    - CSS - 19 KB (incl. frow)
+    - Entire re-frame docs - 125 KB
+
+
+- Time to first load when run locally - about 600 - 700 ms
+
+- Problem with eager loading (with no cache) - hit the rate limit for the
+  github API pretty easily, especially during development. Without authenticating,
+  the rate limit is 60 calls per hour (which is way, way too few for development work).
+  
+
+
+
 ### Current Plan
 
 1. Build everything assuming eager loading
--
--
-1. Implement caching with localstorage
-1. Look at what needs to change for lazy loading (if anything)
+2. Implement caching with localstorage
+3. Look at what needs to change for lazy loading (if anything)
 
 
 

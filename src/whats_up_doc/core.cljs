@@ -18,7 +18,7 @@
 (defn ^:export run
   [options]
   (let [clj-options (js->clj options :keywordize-keys true)]
-  (re-frame/dispatch-sync [:initialize clj-options])
-  (re-frisk/enable-re-frisk! {:x 300 :y 0})
-  (mount-root)))
+    (re-frame/dispatch-sync [:initialize clj-options])
+    (re-frisk/enable-re-frisk! {:x 300 :y 0})
+    (mount-root)))
 

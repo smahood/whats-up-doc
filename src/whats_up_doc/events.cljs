@@ -4,6 +4,9 @@
             [whats-up-doc.github-fx]))
 
 
+(defn make-root [user repo path]
+  (str "https://api.github.com/repos/" user "/" repo "/contents/" path))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Initialize Application Data ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -12,10 +15,13 @@
 (re-frame/reg-event-fx
   :initialize
   (fn [{:keys [db]} [_ options]]
-    {:db          (if (empty? db)
-                    (merge db db/initial-state {:initialization-options options})
-                    db)
-     :github/root (:root options)}))
+    (let [root (make-root (:user options) (:repo options) (:path options))]
+      {:db          (if (empty? db)
+                      (merge db db/initial-state {:initialization-options
+                                                  (assoc options
+                                                    :root root)})
+                      db)
+       :github/root root})))
 
 
 ;;;;;;;;;;;;;;;;;;;;

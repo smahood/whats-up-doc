@@ -19,7 +19,11 @@
   "Renders markdown headings"
   [entry]
   (re-frisk/add-in-data [:debug :toc :render-toc-heading] entry)
-  [:li.toc-entry.heading [:span {:style {:font-weight "bold"}} (:display entry)]])
+  [:li.toc-entry.heading
+   [:span
+    {:style {:font-weight "bold"}
+     :on-click #(re-frame/dispatch [:reading/navigate-fx entry])}
+    (:display entry)]])
 
 
 (defn render-toc-link
@@ -62,12 +66,12 @@
               :max-width "40ch"
               :font-size (str @font-size "px")}}
      [:div
-      ^{:key (str ":toc-panel/" (:index (first @toc-panel)))}
-      [render-toc-title (first @toc-panel)]]
+      ^{:key (str ":toc-panel/" (:index (:toc-header @toc-panel)))}
+      [render-toc-title (:toc-header @toc-panel)]]
      [:ul
 
       (doall
-        (for [entry (rest @toc-panel)]
+        (for [entry (:toc-entries @toc-panel)]
           ^{:key (str ":toc-panel/" (:index entry))}
           [render-toc-entry entry]))]]))
 
@@ -102,7 +106,7 @@
       [:div
        {:style                   {:margin-top  "-24px"
                                   :padding-top "0"}
-        :dangerouslySetInnerHTML {:__html (markdown/md->html @reading-panel
+        :dangerouslySetInnerHTML {:__html (markdown/md->html (:markdown @reading-panel)
                                                              :heading-anchors true
                                                              :reference-links? true)}}]
       [:br]]]))
