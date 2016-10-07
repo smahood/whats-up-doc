@@ -29,7 +29,7 @@
 (defn render-toc-link
   "Renders markdown links"
   [entry]
-  (re-frisk/add-in-data [:debug :toc :render-toc-link] entry)
+  (re-frisk/add-in-data [:debug :toc :toc/render-toc-link] entry)
   [:ul.nested
    [:li
     [:a

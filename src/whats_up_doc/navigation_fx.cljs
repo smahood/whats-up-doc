@@ -32,5 +32,6 @@
   [re-frame/debug localstorage/intercept-key localstorage/int2]
   (fn [cofx]
     (println ":navigate-fx int1 int2")
-    (re-frisk/add-in-data [:debug :toc :reading/navigate-fx] {:cofx cofx})
+    (re-frisk/add-in-data [:debug :reading :reading/navigate-fx] {:cofx cofx})
     {}))
+01
