@@ -5,8 +5,7 @@
             [day8.re-frame.http-fx]
             [re-frisk.core :as re-frisk]
             [camel-snake-kebab.core :as kebab]
-            [whats-up-doc.markdown-fx :as markdown]
-            [whats-up-doc.localstorage]))
+            [whats-up-doc.markdown-fx :as markdown]))
 
 (defn get-folder-from-file [url]
   (clojure.string/join "/" (drop-last (clojure.string/split url #"/"))))
@@ -56,7 +55,6 @@
 (defn build-toc-data
   "Parses the markdown from a single file into a map that can be used to build the table of contents"
   [parent markdown-content]
-
   (re-frisk/add-in-data [:debug :github :github/build-toc-data] {:parent           parent
                                                                  :markdown-content markdown-content})
   (into []
@@ -91,6 +89,15 @@
                    :path       path
                    :expanded   false})))))))
 
+(defn build-toc-header
+  [transformed-file]
+  {:type     "link"
+   :markdown (str "[Table of Contents](" (:name transformed-file) ")")
+   :display  "Table of Contents"
+   :link     (:name transformed-file)
+   :url      (:url transformed-file)
+   :path     (keyword (:path transformed-file))
+   :index    0})
 
 (defn transform-file-result
   "Transform the result returned from the github API for individual files"
@@ -106,6 +113,7 @@
         :toc-data toc-data)
       ;; TODO - proper error message and error handling
       {(keyword (:path result)) (str "Error: Result type is " (:type result) ", expecting file")})))
+
 
 (defn transform-folder-result
   [folder result]
@@ -130,55 +138,95 @@
   ;; --- Content of Second Page
   ""
   )
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Caching in LocalStorage ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(def read-cache
+  (re-frame/->interceptor
+    :id :github/read-cache
+    :before (fn [context]
+              (re-frisk/add-in-data [:debug :github :github/read-cache :before] {:context context})
+              (let [root (-> context :coeffects :db :initialization-options :root)
+                    cache (.getItem js/localStorage root)]
+                ;; TODO - validate cache here
+                (assoc-in context [:coeffects :cache] cache)))
+    :after (fn [context]
+             (re-frisk/add-in-data [:debug :github :github/read-cache :after] {:context context})
+             context)))
+
+
+(def write-cache
+  (re-frame/->interceptor
+    :id :github/write-cache
+    :before (fn [context]
+              (re-frisk/add-in-data [:debug :github :github/write-cache :before] {:context context})
+              context)
+    :after (fn [context]
+             (re-frisk/add-in-data [:debug :github :github/write-cache :after] {:context context})
+             (.setItem js/localStorage (get-in context [:effects :db :root :url])
+                       (str {:root          (get-in context [:effects :db :root])
+                             :github-files  (get-in context [:effects :db :github-files])
+                             :toc-panel     (get-in context [:effects :db :toc-panel])
+                             :reading-panel (get-in context [:effects :db :reading-panel])
+                             }))
+             context)))
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Fetch root document ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+
 (re-frame/reg-fx
   :github/root
-  (fn [options]
-    (re-frisk/add-in-data [:debug :github :github/root] {:options options})
-    (re-frame/dispatch [:github/fetch-root-fx options])
+  (fn [args]
+    ;; TODO - SPEC - args should be a single root string
+    ;; TODO - re-frisk doesn't seem to be working here
+    (re-frisk/add-in-data [:debug :github :github/root] {:args args})
+    (re-frame/dispatch [:github/fetch-root-fx args])
     {}))
 
 
 (re-frame/reg-event-fx
   :github/fetch-root-fx
-  (fn [{:keys [db]} [_ root]]
-    (re-frisk/add-in-data [:debug :github :github/fetch-root-fx] {:db            db
-                                                                  :root          root
-                                                                  :github-folder (get-folder-from-file root)})
+  [read-cache]
+  (fn [{:keys [db cache]} [_ root]]
+    (re-frisk/add-in-data [:debug :github :github/fetch-root-fx]
+                          {:db            db
+                           :root          root
+                           :cache         cache
+                           :github-folder (get-folder-from-file root)})
     {:http-xhrio    {:method          :get
                      :uri             root
                      :response-format (ajax/json-response-format {:keywords? true})
                      :on-success      [:github/fetch-root-success root]
                      :on-failure      [:github/fetch-root-failure root]}
-     :github/folder (str (get-folder-from-file root) (get-branch-from-file root))}))
+     :github/folder (str (get-folder-from-file root) (get-branch-from-file root))
+     :db            (assoc db :initialized? true)}))
 
 
 (re-frame/reg-event-db
   :github/fetch-root-success
+  [write-cache]
   (fn [db [_ root result]]
     (let [transformed-result (transform-file-result result)
-          toc-header {:type     "link"
-                      :markdown (str "[Table of Contents](" (:name transformed-result) ")")
-                      :display  "Table of Contents"
-                      :link     (:name transformed-result)
-                      :url (:url transformed-result)
-                      :path (keyword (:path transformed-result))
-                      :index 0}]
+          toc-header (build-toc-header transformed-result)]
       (re-frisk/add-in-data [:debug :github :github/fetch-root-success] {:db                 db
                                                                          :root               root
                                                                          :result             result
                                                                          :transformed-result transformed-result})
       (-> db
+          (assoc :root transformed-result)
           (assoc-in [:github-files (keyword (:path result))] transformed-result)
           (assoc-in [:toc-panel :toc-header] toc-header)
           (assoc-in [:toc-panel :toc-entries] (:toc-data transformed-result))
           (assoc-in [:reading-panel :markdown] (:markdown transformed-result))
-          (assoc :initialized? true)
-          ))))
+          (assoc :initialized? true)))))
 
 
 (re-frame/reg-event-fx
@@ -187,6 +235,13 @@
     (re-frisk/add-in-data [:debug :github :github/fetch-root-failure] {:db db :root root :result result})
     (re-frame/dispatch [:display-error result])             ;; TODO - Make this error SUPER obvious, since things can't work without it
     {}))
+
+
+(re-frame/reg-event-db
+  :github/initialize-root
+  (fn [db]
+    (re-frisk/add-in-data [:debug :github :github/initialize-root] {:db db})
+    db))
 
 
 ;;;;;;;;;;;;;;;;;

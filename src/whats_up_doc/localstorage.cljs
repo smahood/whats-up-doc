@@ -8,23 +8,38 @@
 (defn localstorage-key [user repo path]
   (str "whats-up-doc-" user "/" repo "/" path))
 
-;
+
 ;(re-frame/reg-cofx
 ;  :localstorage
 ;  (fn [cofx args]
 ;    (re-frisk/add-in-data [:debug :localstorage/localstorage-cofx] {:cofx cofx :args args})
 ;    (assoc cofx :localstorage {:args args})))
 
+
+;; Behaviour for localstorage
+;; -
+
+
+(def github-cache
+  (re-frame/->interceptor
+    :id :localstorage/github-cache
+    :before (fn [context]
+              (re-frisk/add-in-data [:debug :localstorage :localstorage/github-cache :before] {:context context})
+              (let [url (:url (val (get-in context [:coeffects :event])))]
+
+                )
+              context)))
+
+
+
 (def intercept-key
   (re-frame/->interceptor
     :id :localstorage/intercept-key
     :before (fn [context]
               (re-frisk/add-in-data [:debug :localstorage :localstorage/intercept-key :before] {:context context})
-              (assoc-in context [:coeffects :localstorage :key]
-                        (:url (val (get-in context [:coeffects :event])))))))
-
-
-
+              (assoc-in context [:coeffects :localstorage]
+                        {:key (:url (val (get-in context [:coeffects :event])))
+                         }))))
 
 
 (def int1

@@ -63,6 +63,7 @@
         font-size (re-frame/subscribe [:font-size])]
     [:div.toc-panel.hidden-xs.col-sm-3-12.col-md-3-12.col-lg-3-12
      {:style {:border    "solid 2px black"
+              :border-right "0"
               :max-width "40ch"
               :font-size (str @font-size "px")}}
      [:div
@@ -91,12 +92,13 @@
       {:style {:padding-left  "10px"
                :border        "solid 2px black"
                :max-width     "80ch"
-               :border-left   "0px"
                :font-size     (str @font-size "px")
                :margin-right  "10px"
                :padding-right "10px"}}
 
       [:div.frow.justify-end.items-stretch
+       [:img.clickable {:src "icons/ic_menu_black_24px.svg"
+                        :height "24px"}]
        [:img.clickable {:src      "icons/ic_zoom_out_black_24px.svg"
                         :height   "24px"
                         :on-click #(re-frame/dispatch [:decrease-font-size])}]
