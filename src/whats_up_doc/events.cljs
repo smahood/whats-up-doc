@@ -1,7 +1,9 @@
 (ns whats-up-doc.events
   (:require [re-frame.core :as re-frame]
             [whats-up-doc.db :as db]
-            [whats-up-doc.github-fx]))
+            [whats-up-doc.github-fx]
+            [cognitect.transit :as transit]
+            [re-frisk.core :as re-frisk]))
 
 
 (defn make-root [user repo path]
@@ -13,8 +15,9 @@
 
 (defn get-cache [root]
   (let [cache-string (.getItem js/localStorage root)
-        cache (if cache-string (cljs.reader/read-string cache-string) {})]
-    {:root          (or (:root cache) {})
+        cache (if cache-string (transit/read (transit/reader :json) cache-string) {})]
+    ;; TODO - SPEC - validate cache here
+    {:root          (or (:root cache) {:url root})
      :toc-panel     (or (:toc-panel cache) {})
      :reading-panel (or (:reading-panel cache) {})
      :github-files  (or (:github-files cache) {})}))

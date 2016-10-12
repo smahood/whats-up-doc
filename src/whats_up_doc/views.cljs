@@ -87,7 +87,8 @@
   []
   (let [reading-panel (re-frame/subscribe [:reading-panel])
         font-size (re-frame/subscribe [:font-size])]
-    [:div.reading-panel.col-xs-12-12.col-sm-9-12.col-md-9-12.col-lg-8-12
+    [:div.reading-panel.col-xs-12-12.col-sm-9-12.col-md-9-12.col-lg-9-12
+     ;; TODO - Fix width of TOC when growing/shrinking - too much whitespace on the right, that should shrink first
      [:div
       {:style {:padding-left  "10px"
                :border        "solid 2px black"

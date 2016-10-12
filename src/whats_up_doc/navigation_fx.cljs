@@ -17,20 +17,15 @@
 
 (re-frame/reg-event-fx
   :toc/navigate-fx
-  [localstorage/intercept-key localstorage/int2]
-  (fn [{:keys [db localstorage]} [_ toc-entry]]
+  (fn [{:keys [db]} [_ toc-entry]]
     (re-frisk/add-in-data [:debug :toc :toc/navigate-fx] {:db        db
-                                                          :localstorage localstorage
                                                           :toc-entry toc-entry})
-    (if-let [file (get-in db [:github-files (:path toc-entry)])]
-      {:db (assoc-in db [:reading-panel :markdown] (:markdown file))}
-      {})))
+    {:github/file [(:url toc-entry) (:path toc-entry)]}))
 
 
 (re-frame/reg-event-fx
   :reading/navigate-fx
-  [re-frame/debug localstorage/intercept-key localstorage/int2]
+  [re-frame/debug]
   (fn [cofx]
-    (println ":navigate-fx int1 int2")
     (re-frisk/add-in-data [:debug :reading :reading/navigate-fx] {:cofx cofx})
     {}))

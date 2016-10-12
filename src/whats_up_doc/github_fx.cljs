@@ -5,7 +5,8 @@
             [day8.re-frame.http-fx]
             [re-frisk.core :as re-frisk]
             [camel-snake-kebab.core :as kebab]
-            [whats-up-doc.markdown-fx :as markdown]))
+            [whats-up-doc.markdown-fx :as markdown]
+            [cognitect.transit :as transit]))
 
 (defn get-folder-from-file [url]
   (clojure.string/join "/" (drop-last (clojure.string/split url #"/"))))
@@ -142,19 +143,19 @@
 ;; Caching in LocalStorage ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-(def read-cache
-  (re-frame/->interceptor
-    :id :github/read-cache
-    :before (fn [context]
-              (re-frisk/add-in-data [:debug :github :github/read-cache :before] {:context context})
-              (let [root (-> context :coeffects :db :initialization-options :root)
-                    cache (.getItem js/localStorage root)]
-                ;; TODO - validate cache here
-                (assoc-in context [:coeffects :cache] cache)))
-    :after (fn [context]
-             (re-frisk/add-in-data [:debug :github :github/read-cache :after] {:context context})
-             context)))
+; ;; Unused - keeping it here until caching is for sure working well
+;(def read-cache
+;  (re-frame/->interceptor
+;    :id :github/read-cache
+;    :before (fn [context]
+;              (re-frisk/add-in-data [:debug :github :github/read-cache :before] {:context context})
+;              (let [root (-> context :coeffects :db :root :url)
+;                    cache (.getItem js/localStorage root)]
+;
+;                (assoc-in context [:coeffects :cache] cache)))
+;    :after (fn [context]
+;             (re-frisk/add-in-data [:debug :github :github/read-cache :after] {:context context})
+;             context)))
 
 
 (def write-cache
@@ -164,14 +165,16 @@
               (re-frisk/add-in-data [:debug :github :github/write-cache :before] {:context context})
               context)
     :after (fn [context]
-             (re-frisk/add-in-data [:debug :github :github/write-cache :after] {:context context})
-             (.setItem js/localStorage (get-in context [:effects :db :root :url])
-                       (str {:root          (get-in context [:effects :db :root])
-                             :github-files  (get-in context [:effects :db :github-files])
-                             :toc-panel     (get-in context [:effects :db :toc-panel])
-                             :reading-panel (get-in context [:effects :db :reading-panel])
-                             }))
-             context)))
+             (let [key (get-in context [:effects :db :root :url])
+                   cache {:root          (get-in context [:effects :db :root])
+                          :github-files  (get-in context [:effects :db :github-files])
+                          :toc-panel     (get-in context [:effects :db :toc-panel])
+                          :reading-panel (get-in context [:effects :db :reading-panel])}]
+               (re-frisk/add-in-data [:debug :github :github/write-cache :after] {:context context
+                                                                                  :cache   cache
+                                                                                  :transit-cache (transit/write (transit/writer :json) cache)})
+               (.setItem js/localStorage key (transit/write (transit/writer :json) cache))
+               context))))
 
 
 
@@ -194,12 +197,11 @@
 
 (re-frame/reg-event-fx
   :github/fetch-root-fx
-  [read-cache]
-  (fn [{:keys [db cache]} [_ root]]
+  []
+  (fn [{:keys [db]} [_ root]]
     (re-frisk/add-in-data [:debug :github :github/fetch-root-fx]
                           {:db            db
                            :root          root
-                           :cache         cache
                            :github-folder (get-folder-from-file root)})
     {:http-xhrio    {:method          :get
                      :uri             root
@@ -237,13 +239,6 @@
     {}))
 
 
-(re-frame/reg-event-db
-  :github/initialize-root
-  (fn [db]
-    (re-frisk/add-in-data [:debug :github :github/initialize-root] {:db db})
-    db))
-
-
 ;;;;;;;;;;;;;;;;;
 ;; Fetch files ;;
 ;;;;;;;;;;;;;;;;;
@@ -258,25 +253,28 @@
 
 (re-frame/reg-fx
   :github/file
-  (fn [file]
-    (re-frisk/add-in-data [:debug :github :github/file] {:file file})
-    (re-frame/dispatch [:github/fetch-file-fx file])))
+  (fn [[url key]]
+    (re-frisk/add-in-data [:debug :github :github/file] {:key key
+                                                         :url url})
+    (re-frame/dispatch [:github/fetch-file-fx url key])))
 
 
 (re-frame/reg-event-fx
   :github/fetch-file-fx
-  (fn [{:keys [db]} [_ file]]
-    (re-frisk/add-in-data [:debug :github :github/fetch-file-fx] {:db db :file file})
+  (fn [{:keys [db]} [_ url key]]
+    (re-frisk/add-in-data [:debug :github :github/fetch-file-fx] {:db db :url url :key key})
+
     ;; TODO - check if this currently exists in db and if SHA is up to date with folder. If so, don't have to fetch it
     {:http-xhrio {:method          :get
-                  :uri             file
+                  :uri             url
                   :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [:github/fetch-file-success file]
-                  :on-failure      [:github/fetch-folder-failure file]}}))
+                  :on-success      [:github/fetch-file-success url]
+                  :on-failure      [:github/fetch-folder-failure url]}}))
 
 
 (re-frame/reg-event-db
   :github/fetch-file-success
+  [write-cache]
   (fn [db [_ file result]]
     (re-frisk/add-in-data [:debug :github :github/fetch-file-success] {:db db :file file :result result})
     (assoc-in db

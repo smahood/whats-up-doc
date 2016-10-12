@@ -17,6 +17,7 @@
                  [cljs-ajax "0.5.8"]
                  [camel-snake-kebab "0.4.0"]
                  [markdown-clj "0.9.89"]
+                 [com.cognitect/transit-cljs "0.8.239"]
                  [org.clojure/core.async "0.2.391"
                   :exclusions [org.clojure/tools.reader]]]
 
