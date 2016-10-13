@@ -15,26 +15,28 @@ body{
 .reading-panel {};
 
 
-
-
 h1, h2, h3, h4 {
 	display: block; text-decoration: none;
 	font: Helvetica, Arial, Sans-Serif;
-
  }
 
 h1 {
   font-size: 1.8em;
+  	margin-top: 0;
  }
 
 h2 {
   font-size: 1.6em;
+  margin-top: 0px;
+
  }
 h3 {
   font-size: 1.4em;
+  	margin-top: 0;
  }
 h4 {
   font-size: 1.2em;
+  	margin-top: 0;
  }
 
 pre {

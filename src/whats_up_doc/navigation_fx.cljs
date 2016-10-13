@@ -4,16 +4,7 @@
             [day8.re-frame.http-fx]
             [re-frisk.core :as re-frisk]
             [camel-snake-kebab.core :as kebab]
-            [whats-up-doc.localstorage :as localstorage]
             ))
-
-;(re-frame/reg-fx
-;  :toc/navigate
-;  (fn [toc-entry]
-;    (re-frisk/add-in-data [:debug :toc :toc/navigate] {:toc-entry toc-entry})
-;    {}
-;    ))
-
 
 (re-frame/reg-event-fx
   :toc/navigate-fx

@@ -21,7 +21,7 @@
   (re-frisk/add-in-data [:debug :toc :render-toc-heading] entry)
   [:li.toc-entry.heading
    [:span
-    {:style {:font-weight "bold"}
+    {:style    {:font-weight "bold"}
      :on-click #(re-frame/dispatch [:reading/navigate-fx entry])}
     (:display entry)]])
 
@@ -62,10 +62,10 @@
   (let [toc-panel (re-frame/subscribe [:toc-panel])
         font-size (re-frame/subscribe [:font-size])]
     [:div.toc-panel.hidden-xs.col-sm-3-12.col-md-3-12.col-lg-3-12
-     {:style {:border    "solid 2px black"
+     {:style {:border       "solid 2px black"
               :border-right "0"
-              :max-width "40ch"
-              :font-size (str @font-size "px")}}
+              :max-width    "40ch"
+              :font-size    (str @font-size "px")}}
      [:div
       ^{:key (str ":toc-panel/" (:index (:toc-header @toc-panel)))}
       [render-toc-title (:toc-header @toc-panel)]]
@@ -98,7 +98,7 @@
                :padding-right "10px"}}
 
       [:div.frow.justify-end.items-stretch
-       [:img.clickable {:src "icons/ic_menu_black_24px.svg"
+       [:img.clickable {:src    "icons/ic_menu_black_24px.svg"
                         :height "24px"}]
        [:img.clickable {:src      "icons/ic_zoom_out_black_24px.svg"
                         :height   "24px"
@@ -107,7 +107,7 @@
                         :height   "24px"
                         :on-click #(re-frame/dispatch [:increase-font-size])}]]
       [:div
-       {:style                   {:margin-top  "-24px"
+       {:style                   {:margin-top  "-18px"
                                   :padding-top "0"}
         :dangerouslySetInnerHTML {:__html (markdown/md->html (:markdown @reading-panel)
                                                              :heading-anchors true
@@ -124,5 +124,4 @@
       [:div.main
        [:div.frow.justify-start.items-stretch
         [toc-panel]
-        [reading-panel]]]
-      )))
+        [reading-panel]]])))
