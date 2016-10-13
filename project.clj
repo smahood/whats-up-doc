@@ -1,4 +1,4 @@
-(defproject whats-up-doc "0.1.1"
+(defproject whats-up-doc "0.1.2-SNAPSHOT"
   :description "A reader for GitHub documentation built in ClojureScript with re-frame"
 
   :url "http://whats-up-doc.org"
