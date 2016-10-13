@@ -50,7 +50,8 @@
   [:div {:style {:margin-top "10px"}}
    [:a
     {:style    {:margin-left "10px"
-                :font-size   "1.3em"}
+                :font-size   "1.3em"
+                :font-weight "bold"}
      :href     "#"
      :on-click #(re-frame/dispatch [:toc/navigate-fx entry])}
     (:display entry)]
@@ -81,11 +82,22 @@
 ;; Reading Frame ;;
 ;;;;;;;;;;;;;;;;;;;
 
+(defn child-page [child file]
+  [:div
+   [:hr]
+   [:div [:h3 (:display child)]
+    (if file
+      [:div {:dangerouslySetInnerHTML {:__html (markdown/md->html (:markdown file)
+                                                                  :heading-anchors true
+                                                                  :reference-links? true)}}]
+      [:div "No File!"])]
+   [:br]])
 
 (defn reading-panel
   "Render the reading frame"
   []
   (let [reading-panel (re-frame/subscribe [:reading-panel])
+        github-files (re-frame/subscribe [:github-files])
         font-size (re-frame/subscribe [:font-size])]
     [:div.reading-panel.col-xs-12-12.col-sm-9-12.col-md-9-12.col-lg-9-12
      ;; TODO - Fix width of TOC when growing/shrinking - too much whitespace on the right, that should shrink first
@@ -107,11 +119,14 @@
                         :height   "24px"
                         :on-click #(re-frame/dispatch [:increase-font-size])}]]
       [:div
-       {:style                   {:margin-top  "-18px"
-                                  :padding-top "0"}
+
+       {:style {:margin-top "-15px"}
         :dangerouslySetInnerHTML {:__html (markdown/md->html (:markdown @reading-panel)
                                                              :heading-anchors true
                                                              :reference-links? true)}}]
+      ;(doall (for [child (:children @reading-panel)]
+      ;         ^{:key (str ":reading-panel/child-" (:index child))}
+      ;         [child-page child ((:path child) @github-files)]))
       [:br]]]))
 
 ;;;;;;;;;;;;;;;;;;;;

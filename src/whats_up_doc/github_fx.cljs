@@ -190,6 +190,7 @@
 
 
 
+
 (re-frame/reg-fx
   :github/root
   (fn [args]
@@ -232,7 +233,10 @@
           (assoc-in [:github-files (keyword (:path result))] transformed-result)
           (assoc-in [:toc-panel :toc-header] toc-header)
           (assoc-in [:toc-panel :toc-entries] (:toc-data transformed-result))
+          ;(assoc-in [:reading-panel :name] (:name transformed-result))
           (assoc-in [:reading-panel :markdown] (:markdown transformed-result))
+          ;(assoc-in [:reading-panel :children]
+          ;          (filter #(= "link" (:type %)) (:toc-data transformed-result)))
           (assoc :initialized? true)))))
 
 
@@ -293,7 +297,6 @@
   [write-cache]
   (fn [db [_ file result]]
     (let [transformed-result (transform-file-result result)]
-
       (re-frisk/add-in-data [:debug :github :github/fetch-file-success] {:db                 db
                                                                          :file               file
                                                                          :result             result
@@ -341,8 +344,7 @@
     (if (= "eager" (get-in db [:initialization-options :loading]))
       (doseq [file result]
         (cond (= "file" (:type file)) (re-frame/dispatch [:github/fetch-file-fx (:url file)])
-              (= "dir" (:type file)) (re-frame/dispatch [:github/fetch-folder-fx (:url file)])
-              )))
+              (= "dir" (:type file)) (re-frame/dispatch [:github/fetch-folder-fx (:url file)]))))
     ;; TODO - should I be checking stale files whenever a folder is loaded?
     (assoc-in db [:github-folders (get-folder-keyword folder)]
               (transform-folder-result folder result))))
