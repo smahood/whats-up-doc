@@ -6,11 +6,17 @@
             [camel-snake-kebab.core :as kebab]
             ))
 
+
+
+
 (re-frame/reg-event-fx
   :toc/navigate-fx
   (fn [{:keys [db]} [_ toc-entry]]
     (re-frisk/add-in-data [:debug :toc :toc/navigate-fx] {:db        db
                                                           :toc-entry toc-entry})
+
+
+
     {:github/file [(:url toc-entry) (:path toc-entry)]}))
 
 
@@ -20,3 +26,11 @@
   (fn [cofx]
     (re-frisk/add-in-data [:debug :reading :reading/navigate-fx] {:cofx cofx})
     {}))
+
+(re-frame/reg-event-fx
+  :link/navigate-fx
+  [re-frame/debug]
+  (fn [cofx]
+    (re-frisk/add-in-data [:debug :reading :reading/navigate-fx] {:cofx cofx})
+    {}))
+

@@ -4,6 +4,7 @@
             [re-frisk.core :refer-macros [def-view]]
             [re-frisk.core :as re-frisk]
             [markdown.core :as markdown]
+            [markdown.transformers :refer [transformer-vector]]
             [whats-up-doc.navigation-fx]))
 
 
@@ -33,7 +34,7 @@
   [:ul.nested
    [:li
     [:a
-     {:href     "#"
+     {:href     (str "#" (:link entry))
       :on-click #(re-frame/dispatch [:toc/navigate-fx entry])}
      (:display entry)]]])
 
@@ -93,6 +94,25 @@
       [:div "No File!"])]
    [:br]])
 
+(defn capitalize [text state]
+  (println text)
+  (if (re-find #"href" text)
+    (do
+      (println (clojure.string/split text #"href"))
+      (println "text - " text)
+      ;(println "state - " state)
+      ))
+  [(.toUpperCase text) state])
+
+(defn printer [text state]
+  ;(println text)
+  ; (println state)
+  (if (re-find #"href" text)
+    [(clojure.string/replace text #"href='" "href='#") state]
+    [text state]
+    ))
+
+
 (defn reading-panel
   "Render the reading frame"
   []
@@ -120,10 +140,16 @@
                         :on-click #(re-frame/dispatch [:increase-font-size])}]]
       [:div
 
-       {:style {:margin-top "-15px"}
+       {:style                   {:margin-top "-15px"}
+
+        ;:dangerouslySetInnerHTML {:__html (:markdown @reading-panel)}
         :dangerouslySetInnerHTML {:__html (markdown/md->html (:markdown @reading-panel)
-                                                             :heading-anchors true
-                                                             :reference-links? true)}}]
+                                                             ;:heading-anchors true
+                                                             ;:reference-links? true
+                                                             :custom-transformers [printer]
+                                                             ;:replacement-transformers (cons custom-url-transformer transformer-vector)
+                                                             )}
+        }]
       ;(doall (for [child (:children @reading-panel)]
       ;         ^{:key (str ":reading-panel/child-" (:index child))}
       ;         [child-page child ((:path child) @github-files)]))
