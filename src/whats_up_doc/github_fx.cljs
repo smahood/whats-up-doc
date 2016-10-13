@@ -278,9 +278,6 @@
                                                                     :folder-key     folder-key
                                                                     :folder         folder
                                                                     :file-in-folder file-in-folder})
-
-      (println (:sha cached-file))
-      (println (:sha file-in-folder))
       (if (and cached-file (= (:sha cached-file) (:sha file-in-folder)))
         {:db (assoc-in db [:reading-panel :markdown] (:markdown cached-file))} ;; If cached file matches folder SHA, don't bother fetching it
 
@@ -288,9 +285,7 @@
                       :uri             url
                       :response-format (ajax/json-response-format {:keywords? true})
                       :on-success      [:github/fetch-file-success url]
-                      :on-failure      [:github/fetch-folder-failure url]}}
-
-        ))))
+                      :on-failure      [:github/fetch-folder-failure url]}}))))
 
 
 (re-frame/reg-event-db
@@ -299,10 +294,12 @@
   (fn [db [_ file result]]
     (let [transformed-result (transform-file-result result)]
 
-      (re-frisk/add-in-data [:debug :github :github/fetch-file-success] {:db                 db :file file :result result
+      (re-frisk/add-in-data [:debug :github :github/fetch-file-success] {:db                 db
+                                                                         :file               file
+                                                                         :result             result
                                                                          :transformed-result transformed-result})
       (-> db
-          (assoc-in [::github-files (keyword (:path result))] (transform-file-result result))
+          (assoc-in [:github-files (keyword (:path result))] (transform-file-result result))
           (assoc-in [:reading-panel :markdown] (:markdown transformed-result))))))
 
 
