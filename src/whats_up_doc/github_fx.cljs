@@ -8,6 +8,7 @@
             [whats-up-doc.markdown-fx :as markdown]
             [cognitect.transit :as transit]))
 
+
 (defn get-folder-from-file [url]
   (clojure.string/join "/" (drop-last (clojure.string/split url #"/"))))
 
@@ -20,6 +21,10 @@
 
 (defn get-folder-keyword [url]
   (keyword (last (clojure.string/split url #"/contents/"))))
+
+
+(defn get-folder-keyword-from-file [url]
+  (get-folder-keyword (str (get-folder-from-file url) (get-branch-from-file url))))
 
 
 (defn base64-decode
@@ -170,8 +175,8 @@
                           :github-files  (get-in context [:effects :db :github-files])
                           :toc-panel     (get-in context [:effects :db :toc-panel])
                           :reading-panel (get-in context [:effects :db :reading-panel])}]
-               (re-frisk/add-in-data [:debug :github :github/write-cache :after] {:context context
-                                                                                  :cache   cache
+               (re-frisk/add-in-data [:debug :github :github/write-cache :after] {:context       context
+                                                                                  :cache         cache
                                                                                   :transit-cache (transit/write (transit/writer :json) cache)})
                (.setItem js/localStorage key (transit/write (transit/writer :json) cache))
                context))))
@@ -262,24 +267,43 @@
 (re-frame/reg-event-fx
   :github/fetch-file-fx
   (fn [{:keys [db]} [_ url key]]
-    (re-frisk/add-in-data [:debug :github :github/fetch-file-fx] {:db db :url url :key key})
+    (let [cached-file (get-in db [:github-files key])
+          folder-key (get-folder-keyword-from-file url)
+          folder (get-in db [:github-folders folder-key])
+          file-in-folder (first (filter #(= (:url cached-file) (:url %)) (:files folder)))]
+      (re-frisk/add-in-data [:debug :github :github/fetch-file-fx] {:db             db
+                                                                    :url            url
+                                                                    :key            key
+                                                                    :cached-file    cached-file
+                                                                    :folder-key     folder-key
+                                                                    :folder         folder
+                                                                    :file-in-folder file-in-folder})
 
-    ;; TODO - check if this currently exists in db and if SHA is up to date with folder. If so, don't have to fetch it
-    {:http-xhrio {:method          :get
-                  :uri             url
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [:github/fetch-file-success url]
-                  :on-failure      [:github/fetch-folder-failure url]}}))
+      (println (:sha cached-file))
+      (println (:sha file-in-folder))
+      (if (and cached-file (= (:sha cached-file) (:sha file-in-folder)))
+        {:db (assoc-in db [:reading-panel :markdown] (:markdown cached-file))} ;; If cached file matches folder SHA, don't bother fetching it
+
+        {:http-xhrio {:method          :get
+                      :uri             url
+                      :response-format (ajax/json-response-format {:keywords? true})
+                      :on-success      [:github/fetch-file-success url]
+                      :on-failure      [:github/fetch-folder-failure url]}}
+
+        ))))
 
 
 (re-frame/reg-event-db
   :github/fetch-file-success
   [write-cache]
   (fn [db [_ file result]]
-    (re-frisk/add-in-data [:debug :github :github/fetch-file-success] {:db db :file file :result result})
-    (assoc-in db
-              [:github-files (keyword (:path result))]
-              (transform-file-result result))))
+    (let [transformed-result (transform-file-result result)]
+
+      (re-frisk/add-in-data [:debug :github :github/fetch-file-success] {:db                 db :file file :result result
+                                                                         :transformed-result transformed-result})
+      (-> db
+          (assoc-in [::github-files (keyword (:path result))] (transform-file-result result))
+          (assoc-in [:reading-panel :markdown] (:markdown transformed-result))))))
 
 
 (re-frame/reg-event-fx
