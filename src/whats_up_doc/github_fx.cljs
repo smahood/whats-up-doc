@@ -189,8 +189,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-
-
 (re-frame/reg-fx
   :github/root
   (fn [args]
@@ -203,7 +201,6 @@
 
 (re-frame/reg-event-fx
   :github/fetch-root-fx
-  []
   (fn [{:keys [db]} [_ root]]
     (re-frisk/add-in-data [:debug :github :github/fetch-root-fx]
                           {:db            db

@@ -1,8 +1,7 @@
 (ns whats-up-doc.views
   (:require [reagent.core]
             [re-frame.core :as re-frame]
-            [re-frisk.core :refer-macros [def-view]]
-            [re-frisk.core :as re-frisk]
+            [re-frisk.core :as re-frisk :refer-macros [def-view]]
             [markdown.core :as markdown]
             [markdown.transformers :refer [transformer-vector]]
             [whats-up-doc.navigation-fx]))
@@ -105,64 +104,114 @@
   [(.toUpperCase text) state])
 
 (defn printer [text state]
-  ;(println text)
-  ; (println state)
+
   (if (re-find #"href" text)
-    [(clojure.string/replace text #"href='" "href='#") state]
+    (do
+      (println text)
+      (println state)
+
+      [(clojure.string/replace text #"href='" "href='#top#") state])
     [text state]
     ))
 
+(defn heading? [text type]
+  (when-not (every? #{\space} (take 4 text))
+    (let [trimmed (if text (string/trim text))]
+      (and (not-empty trimmed) (every? #{type} trimmed)))))
 
-(defn reading-panel
-  "Render the reading frame"
-  []
-  (let [reading-panel (re-frame/subscribe [:reading-panel])
-        github-files (re-frame/subscribe [:github-files])
-        font-size (re-frame/subscribe [:font-size])]
-    [:div.reading-panel.col-xs-12-12.col-sm-9-12.col-md-9-12.col-lg-9-12
-     ;; TODO - Fix width of TOC when growing/shrinking - too much whitespace on the right, that should shrink first
-     [:div
-      {:style {:padding-left  "10px"
-               :border        "solid 2px black"
-               :max-width     "80ch"
-               :font-size     (str @font-size "px")
-               :margin-right  "10px"
-               :padding-right "10px"}}
+(defn h1? [text]
+  (heading? text \=))
 
-      [:div.frow.justify-end.items-stretch
-       [:img.clickable {:src    "icons/ic_menu_black_24px.svg"
-                        :height "24px"}]
-       [:img.clickable {:src      "icons/ic_zoom_out_black_24px.svg"
-                        :height   "24px"
-                        :on-click #(re-frame/dispatch [:decrease-font-size])}]
-       [:img.clickable {:src      "icons/ic_zoom_in_black_24px.svg"
-                        :height   "24px"
-                        :on-click #(re-frame/dispatch [:increase-font-size])}]]
-      [:div
+(defn h2? [text]
+  (heading? text \-))f
 
-       {:style                   {:margin-top "-15px"}
+(defn heading-text [text]
+  (-> (clojure.string/replace text #"^([ ]+)?[#]+" "")
+      (clojure.string/replace #"[#]+$" "")
+      string/trim))
 
-        ;:dangerouslySetInnerHTML {:__html (:markdown @reading-panel)}
-        :dangerouslySetInnerHTML {:__html (markdown/md->html (:markdown @reading-panel)
-                                                             ;:heading-anchors true
-                                                             ;:reference-links? true
-                                                             :custom-transformers [printer]
-                                                             ;:replacement-transformers (cons custom-url-transformer transformer-vector)
-                                                             )}
-        }]
-      ;(doall (for [child (:children @reading-panel)]
-      ;         ^{:key (str ":reading-panel/child-" (:index child))}
-      ;         [child-page child ((:path child) @github-files)]))
-      [:br]]]))
+
+
+(defn heading-level [text]
+  (let [num-hashes (count (filter #(not= \space %) (take-while #(or (= \# %) (= \space %)) (seq text))))]
+    (if (pos? num-hashes) num-hashes)))
+
+(defn make-heading [text heading-anchors]
+  (when-let [heading (heading-level text)]
+    (let [text (heading-text text)]
+      (str "<h" heading ">"
+           (if heading-anchors (str "<a name=\"" (-> text string/lower-case (string/replace " " "&#95;")) "\"></a>"))
+           text "</h" heading ">"))))
+
+(defn heading [text state]
+  (cond
+    (or (:codeblock state) (:code state))
+    [text state]
+
+    (h1? *next-line*)
+    [(str "<h1>" text "</h1>") (assoc state :heading true)]
+
+    (h2? *next-line*)
+    [(str "<h2>" text "</h2>") (assoc state :heading true)]
+
+    :else
+    (if-let [heading (make-heading text (:heading-anchors state))]
+      [heading (assoc state :inline-heading true)]
+      [text state])))
+
+
+
+(re-frisk/def-view reading-panel
+                   ; "Render the reading frame"
+                   []
+                   (let [reading-panel (re-frame/subscribe [:reading-panel])
+                         github-files (re-frame/subscribe [:github-files])
+                         font-size (re-frame/subscribe [:font-size])]
+                     [:div.reading-panel.col-xs-12-12.col-sm-9-12.col-md-9-12.col-lg-9-12
+                      ;; TODO - Fix width of TOC when growing/shrinking - too much whitespace on the right, that should shrink first
+                      [:div
+                       {:style {:padding-left  "10px"
+                                :border        "solid 2px black"
+                                :max-width     "80ch"
+                                :font-size     (str @font-size "px")
+                                :margin-right  "10px"
+                                :padding-right "10px"}}
+
+                       [:div.frow.justify-end.items-stretch
+                        [:img.clickable {:src    "icons/ic_menu_black_24px.svg"
+                                         :height "24px"}]
+                        [:img.clickable {:src      "icons/ic_zoom_out_black_24px.svg"
+                                         :height   "24px"
+                                         :on-click #(re-frame/dispatch [:decrease-font-size])}]
+                        [:img.clickable {:src      "icons/ic_zoom_in_black_24px.svg"
+                                         :height   "24px"
+                                         :on-click #(re-frame/dispatch [:increase-font-size])}]]
+                       [:div
+
+                        {:style                   {:margin-top "-15px"}
+
+                         ;:dangerouslySetInnerHTML {:__html (:markdown @reading-panel)}
+                         :dangerouslySetInnerHTML {:__html (markdown/md->html (:markdown @reading-panel)
+                                                                              ;:heading-anchors true
+                                                                              :reference-links? true
+
+                                                                              ;:custom-transformers [printer]
+                                                                              ;:replacement-transformers (cons custom-url-transformer transformer-vector)
+                                                                              )}
+                         }]
+                       ;(doall (for [child (:children @reading-panel)]
+                       ;         ^{:key (str ":reading-panel/child-" (:index child))}
+                       ;         [child-page child ((:path child) @github-files)]))
+                       [:br]]]))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Page Rendering ;;
 ;;;;;;;;;;;;;;;;;;;;
 
-(defn main []
-  (let [initialized? (re-frame/subscribe [:initialized?])]
-    (if @initialized?
-      [:div.main
-       [:div.frow.justify-start.items-stretch
-        [toc-panel]
-        [reading-panel]]])))
+(re-frisk/def-view main []
+                   (let [initialized? (re-frame/subscribe [:initialized?])]
+                     (if @initialized?
+                       [:div.main
+                        [:div.frow.justify-start.items-stretch
+                         [toc-panel]
+                         [reading-panel]]])))

@@ -1,5 +1,6 @@
 (ns whats-up-doc.subs
-  (:require [re-frame.core :as re-frame]))
+  (:require [re-frame.core :as re-frame]
+            [re-frisk.core :as re-frisk]))
 
 
 (re-frame/reg-sub
@@ -27,3 +28,5 @@
   :initialized?
   (fn [db _]
     (:initialized? db)))
+
+
