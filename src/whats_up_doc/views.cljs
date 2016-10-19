@@ -22,7 +22,8 @@
   [:li.toc-entry.heading
    [:span
     {:style    {:font-weight "bold"}
-     :on-click #(re-frame/dispatch [:reading/navigate-fx entry])}
+     ;:on-click #(re-frame/dispatch [:reading/navigate-fx entry])
+     }
     (:display entry)]])
 
 
@@ -34,7 +35,8 @@
    [:li
     [:a
      {:href     (str "#" (:link entry))
-      :on-click #(re-frame/dispatch [:toc/navigate-fx entry])}
+      :on-click #(re-frame/dispatch [:toc/navigate-fx entry])
+      }
      (:display entry)]]])
 
 
@@ -53,7 +55,8 @@
                 :font-size   "1.3em"
                 :font-weight "bold"}
      :href     "#"
-     :on-click #(re-frame/dispatch [:toc/navigate-fx entry])}
+     ;:on-click #(re-frame/dispatch [:toc/navigate-fx entry])
+     }
     (:display entry)]
    [:hr]
    ])
@@ -103,62 +106,121 @@
       ))
   [(.toUpperCase text) state])
 
+(defn make-url
+  [url-text]
+  ;(println "href found: " url-text)
+  (let [new-str (re-find #"href='.*?'" url-text)
+        replace1 (clojure.string/replace new-str #"href='" "")
+        replace2 (clojure.string/replace replace1 #"'" "")]
+    ;(println "new-str: " new-str)
+    ;(println "replace1: " replace1)
+    ;(println "replace2: " replace2)
+    ;(println (str "#" replace2))
+    ;(println (clojure.string/replace url-text replace2 (str "#" replace2)))
+    (clojure.string/replace url-text replace2 (str "#" replace2))))
+
+
+(defn fix-url
+  ; TODO - Deal with external 'something://' and '../' URLs
+  ; check for url too
+  [text state]
+  (if (re-find #"href" text)
+    [(make-url text) state]
+    ;
+    ;
+    ;
+    ;(do (println "href found")
+    ;    (println text)
+    ;    (let [new-str (re-find #"href='.*?'" text)
+    ;          replace1 (clojure.string/replace new-str #"href='" "")
+    ;          replace2 (clojure.string/replace replace1 #"'" "")]
+    ;      ;(println new-str)
+    ;      ;(println replace1)
+    ;      (println replace2)
+    ;      (println (str "#" replace2))
+    ;
+    ;
+    ;      ;(println state)
+    ;      [text state]
+    ;      ))
+    [text state]))
+
+(defn fix-headings [text state]
+  (cond (re-find #"<h1" text) (do (println "<h1 found")
+                                  (println text)
+                                  ;(println state)
+                                  )
+        (re-find #"<h2" text) (do (println "<h2 found")
+                                  (println text)
+                                  ;(println state)
+                                  )
+        (re-find #"<h3" text) (do (println "<h3 found")
+                                  (println text)
+                                  ;(println state)
+                                  )
+        (re-find #"<h4" text) (do (println "<h4 found")
+                                  (println text)
+                                  ;(println state)
+                                  ))
+  [text state])
+
+
 (defn printer [text state]
 
   (if (re-find #"href" text)
     (do
       (println text)
-      (println state)
+      ; (println state)
 
       [(clojure.string/replace text #"href='" "href='#top#") state])
     [text state]
     ))
-
-(defn heading? [text type]
-  (when-not (every? #{\space} (take 4 text))
-    (let [trimmed (if text (string/trim text))]
-      (and (not-empty trimmed) (every? #{type} trimmed)))))
-
-(defn h1? [text]
-  (heading? text \=))
-
-(defn h2? [text]
-  (heading? text \-))f
-
-(defn heading-text [text]
-  (-> (clojure.string/replace text #"^([ ]+)?[#]+" "")
-      (clojure.string/replace #"[#]+$" "")
-      string/trim))
-
-
-
-(defn heading-level [text]
-  (let [num-hashes (count (filter #(not= \space %) (take-while #(or (= \# %) (= \space %)) (seq text))))]
-    (if (pos? num-hashes) num-hashes)))
-
-(defn make-heading [text heading-anchors]
-  (when-let [heading (heading-level text)]
-    (let [text (heading-text text)]
-      (str "<h" heading ">"
-           (if heading-anchors (str "<a name=\"" (-> text string/lower-case (string/replace " " "&#95;")) "\"></a>"))
-           text "</h" heading ">"))))
-
-(defn heading [text state]
-  (cond
-    (or (:codeblock state) (:code state))
-    [text state]
-
-    (h1? *next-line*)
-    [(str "<h1>" text "</h1>") (assoc state :heading true)]
-
-    (h2? *next-line*)
-    [(str "<h2>" text "</h2>") (assoc state :heading true)]
-
-    :else
-    (if-let [heading (make-heading text (:heading-anchors state))]
-      [heading (assoc state :inline-heading true)]
-      [text state])))
-
+;
+;(defn heading? [text type]
+;  (when-not (every? #{\space} (take 4 text))
+;    (let [trimmed (if text (clojure.string/trim text))]
+;      (and (not-empty trimmed) (every? #{type} trimmed)))))
+;
+;(defn h1? [text]
+;  (heading? text \=))
+;
+;(defn h2? [text]
+;  (heading? text \-))
+;
+;(defn heading-text [text]
+;  (-> (clojure.string/replace text #"^([ ]+)?[#]+" "")
+;      (clojure.string/replace #"[#]+$" "")
+;      clojure.string/trim))
+;
+;;
+;
+;(defn heading-level [text]
+;  (let [num-hashes (count (filter #(not= \space %) (take-while #(or (= \# %) (= \space %)) (seq text))))]
+;    (if (pos? num-hashes) num-hashes)))
+;
+;(defn make-heading [text heading-anchors]
+;  (when-let [heading (heading-level text)]
+;    (let [text (heading-text text)]
+;      (str "<h" heading ">"
+;           (if heading-anchors (str "<a name=\"" (-> text clojure.string/lower-case (clojure.string/replace " " "&#95;")) "\"></a>"))
+;           text "</h" heading ">"))))
+;
+;(defn heading [text state]
+;  (cond
+;    (or (:codeblock state) (:code state))
+;    [text state]
+;
+;    (h1? *next-line*)
+;    [(str "<h1>" text "</h1>") (assoc state :heading true)]
+;
+;    (h2? *next-line*)
+;    [(str "<h2>" text "</h2>") (assoc state :heading true)]
+;
+;    :else
+;    (if-let [heading (make-heading text (:heading-anchors state))]
+;      [heading (assoc state :inline-heading true)]
+;      [text state])))
+;
 
 
 (re-frisk/def-view reading-panel
@@ -188,16 +250,20 @@
                                          :on-click #(re-frame/dispatch [:increase-font-size])}]]
                        [:div
 
-                        {:style                   {:margin-top "-15px"}
+                        {:style {:margin-top "-15px"}
 
                          ;:dangerouslySetInnerHTML {:__html (:markdown @reading-panel)}
-                         :dangerouslySetInnerHTML {:__html (markdown/md->html (:markdown @reading-panel)
-                                                                              ;:heading-anchors true
-                                                                              :reference-links? true
+                         :dangerouslySetInnerHTML
+                                {:__html
+                                 (markdown/md->html (:markdown @reading-panel)
+                                                    ;:heading-anchors true
+                                                    :reference-links? true
 
-                                                                              ;:custom-transformers [printer]
-                                                                              ;:replacement-transformers (cons custom-url-transformer transformer-vector)
-                                                                              )}
+                                                    :custom-transformers [fix-url
+                                                                          ;fix-headings
+                                                                          ]
+                                                    ;:replacement-transformers (cons custom-url-transformer transformer-vector)
+                                                    )}
                          }]
                        ;(doall (for [child (:children @reading-panel)]
                        ;         ^{:key (str ":reading-panel/child-" (:index child))}
