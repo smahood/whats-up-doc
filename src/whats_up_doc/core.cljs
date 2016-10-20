@@ -19,24 +19,27 @@
 
 (defn init-history! []
   (let [history (History.)]
-    (.setEnabled history true)
+
+    ;(println .getToken history)
 
     (e/listen history h/EventType.NAVIGATE
               (fn [e]
                 (re-frame/dispatch [:link/navigate-fx (.-token e)])
-                (println (js-keys e))
+     ;           (println (js-keys e))
                 ;(println (.-type e))
                 ;(println (js-keys (.-target e)))
                 ;(println (.-currentTarget e))
                 ;(println (.-propagationStopped_ e))
                 ;(println (.-defaultPrevented e))
                 ;(println (.-returnValue_ e))
-                (println (.-token e))
+      ;          (println (.-token e))
                 ;(println (.-isNavigation e))
                 ;(println (.-constructor e))
                 ;(println (.-stopPropagation e))
                 ;(println (.-preventDefault e))
-                ))))
+                ))
+    (.setEnabled history true)
+    ))
 
 
 
