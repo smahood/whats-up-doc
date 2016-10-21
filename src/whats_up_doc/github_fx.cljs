@@ -9,6 +9,8 @@
             [cognitect.transit :as transit]))
 
 
+
+
 (defn get-folder-from-file [url]
   (clojure.string/join "/" (drop-last (clojure.string/split url #"/"))))
 
@@ -188,6 +190,20 @@
 ;; Fetch root document ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn url-info-map [url]
+  (let [branch? (re-find #"/?ref=" url)
+        split-branch (clojure.string/split url "?ref=")
+        branch (if branch? (last split-branch) nil)
+        split-contents (clojure.string/split (first split-branch) "contents/")
+        str-path (clojure.string/split (last split-contents) "/")
+        path (map #(keyword %) str-path)]
+    {:url    url
+     :base   (str (first split-contents) "contents/")
+     :branch branch
+     :path   path}))
+
+(defn db-file-path [path]
+  (into [] (flatten (conj [:files] path))))
 
 (re-frame/reg-fx
   :github/root
@@ -207,12 +223,7 @@
                            :root          root
                            :github-folder (get-folder-from-file root)})
 
-    (let [branch? (re-find #"/?ref=" root)
-          split-branch (clojure.string/split root "?ref=")
-          branch (if branch? (last split-branch) nil)
-          split-contents (clojure.string/split (first split-branch) "contents/")
-          path (clojure.string/split (last split-contents) "/")
-          key-path (map #(keyword %) path)]
+    (let [url-info (url-info-map root)]
       {:http-xhrio    {:method          :get
                        :uri             root
                        :response-format (ajax/json-response-format {:keywords? true})
@@ -221,14 +232,9 @@
        :github/folder (str (get-folder-from-file root) (get-branch-from-file root))
        :db            (-> db
                           (assoc :initialized? true)
-                          (assoc :nested-files
-                            {:root {:url    root
-                                    :branch branch
-                                    :path   key-path}})
-                          (assoc-in (into [] (flatten (conj [:nested-files] key-path))) root)
-
-
-                          )})))
+                          (assoc :branch (:branch url-info))
+                          (assoc-in [:files :base] (:base url-info))
+                          (assoc-in (into [] (flatten (conj [:files] (:path url-info)))) url-info))})))
 
 
 (re-frame/reg-event-db
@@ -236,20 +242,25 @@
   [write-cache]
   (fn [db [_ root result]]
     (let [transformed-result (transform-file-result result)
-          toc-header (build-toc-header transformed-result)]
-      (re-frisk/add-in-data [:debug :github :github/fetch-root-success] {:db                 db
-                                                                         :root               root
-                                                                         :result             result
-                                                                         :transformed-result transformed-result})
+          toc-header (build-toc-header transformed-result)
+          url-info (url-info-map root)]
+      (re-frisk/add-in-data [:debug :github :github/fetch-root-success]
+                            {:db                 db
+                             :root               root
+                             :url-info           url-info
+                             :result             result
+                             :transformed-result transformed-result})
       (-> db
           (assoc :root transformed-result)
           (assoc-in [:github-files (keyword (:path result))] transformed-result)
+          (assoc-in (db-file-path (:path url-info))
+                    (merge url-info {:file-sha (:sha transformed-result)
+                                     :markdown (:markdown transformed-result)
+                                     :size     (:size transformed-result)
+                                     :toc-data (:toc-data transformed-result)}))
           (assoc-in [:toc-panel :toc-header] toc-header)
           (assoc-in [:toc-panel :toc-entries] (:toc-data transformed-result))
-          ;(assoc-in [:reading-panel :name] (:name transformed-result))
           (assoc-in [:reading-panel :markdown] (:markdown transformed-result))
-          ;(assoc-in [:reading-panel :children]
-          ;          (filter #(= "link" (:type %)) (:toc-data transformed-result)))
           (assoc :initialized? true)))))
 
 
@@ -284,11 +295,13 @@
 (re-frame/reg-event-fx
   :github/fetch-file-fx
   (fn [{:keys [db]} [_ url key]]
-    (let [cached-file (get-in db [:github-files key])
+    (let [url-info (url-info-map url)
+          cached-file (get-in db [:github-files key])
           folder-key (get-folder-keyword-from-file url)
           folder (get-in db [:github-folders folder-key])
           file-in-folder (first (filter #(= (:url cached-file) (:url %)) (:files folder)))]
       (re-frisk/add-in-data [:debug :github :github/fetch-file-fx] {:db             db
+                                                                    :url-info       url-info
                                                                     :url            url
                                                                     :key            key
                                                                     :cached-file    cached-file
@@ -342,25 +355,62 @@
 (re-frame/reg-event-fx
   :github/fetch-folder-fx
   (fn [{:keys [db]} [_ folder]]
-    (re-frisk/add-in-data [:debug :github :github/fetch-folder-fx] {:db db :folder folder})
-    {:http-xhrio {:method          :get
-                  :uri             folder
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [:github/fetch-folder-success folder]
-                  :on-failure      [:github/fetch-folder-failure folder]}}))
+    (let [url-info (url-info-map folder)]
+      (re-frisk/add-in-data [:debug :github :github/fetch-folder-fx] {:db       db
+                                                                      :folder   folder
+                                                                      :url-info url-info})
+      {:db         (assoc-in db (db-file-path (:path url-info))
+                             (merge url-info (get-in db (db-file-path (:path url-info)))))
+       :http-xhrio {:method          :get
+                    :uri             folder
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [:github/fetch-folder-success folder]
+                    :on-failure      [:github/fetch-folder-failure folder]}})))
 
 
 (re-frame/reg-event-db
   :github/fetch-folder-success
   (fn [db [_ folder result]]
-    (re-frisk/add-in-data [:debug :github :github/fetch-folder-success] {:db db :folder folder :result result})
-    (if (= "eager" (get-in db [:initialization-options :loading]))
-      (doseq [file result]
-        (cond (= "file" (:type file)) (re-frame/dispatch [:github/fetch-file-fx (:url file)])
-              (= "dir" (:type file)) (re-frame/dispatch [:github/fetch-folder-fx (:url file)]))))
-    ;; TODO - should I be checking stale files whenever a folder is loaded?
-    (assoc-in db [:github-folders (get-folder-keyword folder)]
-              (transform-folder-result folder result))))
+    (let [url-info (url-info-map folder)
+          transformed-result (transform-folder-result folder result)
+          files (into {} (map #(let [temp-url (:url %)
+                                     temp-url-info (url-info-map temp-url)]
+                                {(keyword (last (:path temp-url-info)))
+                                 {:url        temp-url
+                                  :base       (:base temp-url-info)
+                                  :branch     (:branch temp-url-info)
+                                  :path       (:path temp-url-info)
+                                  :folder-sha (:sha %)
+                                  :size       (:size %)}})
+                              (:files transformed-result)))]
+      (re-frisk/add-in-data [:debug :file-temp] files)
+      (re-frisk/add-in-data [:debug :folder-temp] (:path url-info))
+
+
+
+
+      ;(doall (for [file (:files transformed-result)]
+      ;         (let [file-url-info (url-info-map (:url file))]
+      ;           (println {:url    (:url file)
+      ;                     :base   (:base file-url-info)
+      ;                     :branch (:branch file-url-info)
+      ;                     :path   (:path file-url-info)
+      ;                     :sha    (:sha file)
+      ;                     :size   (:size file)}))))
+      (re-frisk/add-in-data [:debug :github :github/fetch-folder-success] {:db db :folder folder :result result})
+      (if (= "eager" (get-in db [:initialization-options :loading]))
+        (doseq [file result]
+          (cond (= "file" (:type file)) (re-frame/dispatch [:github/fetch-file-fx (:url file)])
+                (= "dir" (:type file)) (re-frame/dispatch [:github/fetch-folder-fx (:url file)]))))
+      ;; TODO - should I be checking stale files whenever a folder is loaded?
+
+      (-> db
+          (assoc-in (db-file-path (:path url-info))
+                    (merge (get-in db (db-file-path (:path url-info)))
+                           transformed-result
+                           files))
+          (assoc-in [:github-folders (get-folder-keyword folder)] (transform-folder-result folder result))))))
+
 
 
 (re-frame/reg-event-fx

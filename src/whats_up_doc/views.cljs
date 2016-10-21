@@ -21,7 +21,7 @@
   (re-frisk/add-in-data [:debug :toc :render-toc-heading] entry)
   [:li.toc-entry.heading
    [:span
-    {:style    {:font-weight "bold"}
+    {:style {:font-weight "bold"}
      ;:on-click #(re-frame/dispatch [:reading/navigate-fx entry])
      }
     (:display entry)]])
@@ -51,10 +51,10 @@
   (re-frisk/add-in-data [:debug :toc :render-toc-link] entry)
   [:div {:style {:margin-top "10px"}}
    [:a
-    {:style    {:margin-left "10px"
-                :font-size   "1.3em"
-                :font-weight "bold"}
-     :href     "#"
+    {:style {:margin-left "10px"
+             :font-size   "1.3em"
+             :font-weight "bold"}
+     :href  "#"
      ;:on-click #(re-frame/dispatch [:toc/navigate-fx entry])
      }
     (:display entry)]
@@ -66,8 +66,7 @@
   (let [toc-panel (re-frame/subscribe [:toc-panel])
         font-size (re-frame/subscribe [:font-size])]
     [:div.toc-panel.hidden-xs.col-sm-3-12.col-md-3-12.col-lg-3-12
-     {:style {:border       "solid 2px black"
-              :border-right "0"
+     {:style {:border-right "solid 2px black"
               :max-width    "40ch"
               :font-size    (str @font-size "px")}}
      [:div
@@ -233,7 +232,7 @@
                       ;; TODO - Fix width of TOC when growing/shrinking - too much whitespace on the right, that should shrink first
                       [:div
                        {:style {:padding-left  "10px"
-                                :border        "solid 2px black"
+
                                 :max-width     "80ch"
                                 :font-size     (str @font-size "px")
                                 :margin-right  "10px"
@@ -279,5 +278,7 @@
                      (if @initialized?
                        [:div.main
                         [:div.frow.justify-start.items-stretch
+                         {:style {:border "solid 2px black"
+                                  :margin-bottom "10px"}}
                          [toc-panel]
                          [reading-panel]]])))

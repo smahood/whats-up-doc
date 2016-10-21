@@ -9,17 +9,17 @@
   :min-lein-version "2.6.1"
 
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.229"]
+                 [org.clojure/clojurescript "1.9.293"]
+                 [org.clojure/core.async "0.2.395"
+                  :exclusions [org.clojure/tools.reader]]
+                 [camel-snake-kebab "0.4.0"]
+                 [cljs-ajax "0.5.8"]
+                 [com.cognitect/transit-cljs "0.8.239"]
+                 [markdown-clj "0.9.90"]
                  [reagent "0.6.0"]
                  [re-frame "0.8.0"]
-                 [day8.re-frame/http-fx "0.0.4"]
-                 [re-frisk "0.2.2"]
-                 [cljs-ajax "0.5.8"]
-                 [camel-snake-kebab "0.4.0"]
-                 [markdown-clj "0.9.89"]
-                 [com.cognitect/transit-cljs "0.8.239"]
-                 [org.clojure/core.async "0.2.391"
-                  :exclusions [org.clojure/tools.reader]]]
+                 [day8.re-frame/http-fx "0.1.2"]
+                 [re-frisk "0.2.2"]]
 
   :plugins [[lein-figwheel "0.5.8"]
             [lein-ancient "0.6.10"]

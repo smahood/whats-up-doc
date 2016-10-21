@@ -32,13 +32,14 @@
       result)))
 
 
-
-(re-frame/reg-event-fx
-  :toc/navigate-fx
-  (fn [{:keys [db]} [_ toc-entry]]
-    (re-frisk/add-in-data [:debug :toc :toc/navigate-fx] {:db        db
-                                                          :toc-entry toc-entry})
-    {:github/file [(:url toc-entry) (:path toc-entry)]}))
+;
+;(re-frame/reg-event-fx
+;  :toc/navigate-fx
+;  (fn [{:keys [db]} [_ toc-entry]]
+;    (re-frisk/add-in-data [:debug :toc :toc/navigate-fx] {:db        db
+;                                                          :toc-entry toc-entry})
+;  ;  {:github/file [(:url toc-entry) (:path toc-entry)]}
+;  ))
 
 
 (re-frame/reg-event-fx
