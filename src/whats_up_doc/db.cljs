@@ -7,4 +7,6 @@
    :initialization-options {}
    :initialized?           nil
    :reading-panel          {}
-   :toc-panel              {}})
+   :toc-panel              {}
+   :nested-files           {}
+   })

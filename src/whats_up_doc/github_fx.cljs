@@ -206,13 +206,29 @@
                           {:db            db
                            :root          root
                            :github-folder (get-folder-from-file root)})
-    {:http-xhrio    {:method          :get
-                     :uri             root
-                     :response-format (ajax/json-response-format {:keywords? true})
-                     :on-success      [:github/fetch-root-success root]
-                     :on-failure      [:github/fetch-root-failure root]}
-     :github/folder (str (get-folder-from-file root) (get-branch-from-file root))
-     :db            (assoc db :initialized? true)}))
+
+    (let [branch? (re-find #"/?ref=" root)
+          split-branch (clojure.string/split root "?ref=")
+          branch (if branch? (last split-branch) nil)
+          split-contents (clojure.string/split (first split-branch) "contents/")
+          path (clojure.string/split (last split-contents) "/")
+          key-path (map #(keyword %) path)]
+      {:http-xhrio    {:method          :get
+                       :uri             root
+                       :response-format (ajax/json-response-format {:keywords? true})
+                       :on-success      [:github/fetch-root-success root]
+                       :on-failure      [:github/fetch-root-failure root]}
+       :github/folder (str (get-folder-from-file root) (get-branch-from-file root))
+       :db            (-> db
+                          (assoc :initialized? true)
+                          (assoc :nested-files
+                            {:root {:url    root
+                                    :branch branch
+                                    :path   key-path}})
+                          (assoc-in (into [] (flatten (conj [:nested-files] key-path))) root)
+
+
+                          )})))
 
 
 (re-frame/reg-event-db
